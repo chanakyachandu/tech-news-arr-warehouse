@@ -1,0 +1,27 @@
+company_id,company_name,industry,headquarters,founded_year,employee_count,company_size_category,is_public,stock_ticker,has_company_metadata
+COMP001,Airbnb,Data Analytics,"London, UK",1999,19967,Medium,False,,True
+COMP002,Amazon Web Services,SaaS,"Berlin, Germany",2015,27826,Medium,False,,True
+COMP003,Anthropic,FinTech,"San Francisco, CA",2006,43747,Large,False,,True
+COMP004,Cloudflare,Cybersecurity,"Austin, TX",1998,4422,Small,False,CLOU,True
+COMP005,Cohere,,,,,Unknown,,,False
+COMP006,Confluent,Cloud Computing,"London, UK",1995,3884,Small,False,,True
+COMP007,DataRobot,Cloud Computing,"New York, NY",2012,23471,Medium,True,,True
+COMP008,Databricks,Data Analytics,"Berlin, Germany",2003,17962,Medium,True,DATA,True
+COMP009,Elastic,Cybersecurity,"San Francisco, CA",2016,24508,Medium,True,ELAS,True
+COMP010,Google DeepMind,Data Analytics,"Austin, TX",2017,24274,Medium,False,,True
+COMP011,Hugging Face,,,,,Unknown,,,False
+COMP012,Meta AI,Data Analytics,"Seattle, WA",2001,20240,Medium,True,,True
+COMP013,Microsoft,Data Analytics,"Austin, TX",2018,48646,Large,False,,True
+COMP014,Mistral AI,,,,,Unknown,,,False
+COMP015,MongoDB,SaaS,"Austin, TX",2008,16952,Medium,False,MONG,True
+COMP016,NVIDIA,AI/ML,"London, UK",2017,22031,Medium,False,,True
+COMP017,OpenAI,Data Analytics,"Austin, TX",2006,12793,Medium,False,OPEN,True
+COMP018,Palantir,Cloud Computing,"Berlin, Germany",2005,42306,Large,True,,True
+COMP019,Perplexity AI,,,,,Unknown,,,False
+COMP020,Scale AI,AI/ML,"Berlin, Germany",2003,23379,Medium,False,,True
+COMP021,Snowflake,Cloud Computing,"London, UK",2012,49545,Large,True,,True
+COMP022,SpaceX,AI/ML,"Berlin, Germany",2016,31018,Large,False,,True
+COMP023,Stripe,Data Analytics,"Seattle, WA",2002,36348,Large,True,STRI,True
+COMP024,Tesla,Cloud Computing,"London, UK",2008,5691,Small,True,,True
+COMP025,Uber,FinTech,"San Francisco, CA",2015,10144,Medium,False,UBER,True
+COMP026,xAI,,,,,Unknown,,,False

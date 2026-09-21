@@ -1,0 +1,27 @@
+company_id,company_name,industry,company_size_category,is_public,latest_observation_id,latest_article_id,latest_observation_date,latest_arr_usd_M,total_observations_recorded
+COMP001,Airbnb,Data Analytics,Medium,False,ARR0007,ART0565,20-11-2024,8190,17
+COMP002,Amazon Web Services,SaaS,Medium,False,ARR0026,ART0501,04-10-2024,102600,24
+COMP003,Anthropic,FinTech,Large,False,ARR0058,ART0668,03-10-2024,1034,25
+COMP004,Cloudflare,Cybersecurity,Small,False,ARR0091,ART0712,03-11-2024,1647,28
+COMP005,Cohere,,Unknown,,ARR0098,ART0750,15-07-2024,135,6
+COMP006,Confluent,Cloud Computing,Small,False,ARR0114,ART0555,27-10-2024,1156,33
+COMP007,DataRobot,Cloud Computing,Medium,True,ARR0153,ART0655,12-12-2024,407,26
+COMP008,Databricks,Data Analytics,Medium,True,ARR0177,ART0716,26-12-2024,3480,19
+COMP009,Elastic,Cybersecurity,Medium,True,ARR0184,ART0698,26-08-2024,1400,24
+COMP010,Google DeepMind,Data Analytics,Medium,False,ARR0225,ART0704,12-11-2024,1215,26
+COMP011,Hugging Face,,Unknown,,ARR0230,ART0624,14-05-2024,82,2
+COMP012,Meta AI,Data Analytics,Medium,True,ARR0255,ART0689,19-12-2024,1950,27
+COMP013,Microsoft,Data Analytics,Large,False,ARR0275,ART0606,02-12-2024,83850,30
+COMP014,Mistral AI,,Unknown,,ARR0292,ART0632,11-12-2024,260,5
+COMP015,MongoDB,SaaS,Medium,False,ARR0309,ART0748,13-11-2024,2057,31
+COMP016,NVIDIA,AI/ML,Medium,False,ARR0337,ART0684,14-10-2024,62100,26
+COMP017,OpenAI,Data Analytics,Medium,False,ARR0370,ART0710,28-10-2024,4050,24
+COMP018,Palantir,Cloud Computing,Large,True,ARR0388,ART0635,12-12-2024,2691,26
+COMP019,Perplexity AI,,Unknown,,ARR0401,ART0517,10-09-2024,85,3
+COMP020,Scale AI,AI/ML,Medium,False,ARR0431,ART0642,10-10-2024,1307,29
+COMP021,Snowflake,Cloud Computing,Large,True,ARR0441,ART0633,16-11-2024,3612,24
+COMP022,SpaceX,AI/ML,Large,False,ARR0483,ART0589,14-11-2024,9945,29
+COMP023,Stripe,Data Analytics,Large,True,ARR0509,ART0746,02-12-2024,3910,27
+COMP024,Tesla,Cloud Computing,Small,True,ARR0527,ART0547,14-07-2024,98880,24
+COMP025,Uber,FinTech,Medium,False,ARR0545,ART0602,09-10-2024,36380,19
+COMP026,xAI,,Unknown,,ARR0556,ART0545,28-10-2024,180,4

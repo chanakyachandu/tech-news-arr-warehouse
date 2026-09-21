@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches and testing
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# IDE configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
