@@ -13,7 +13,7 @@ An end-to-end data platform implementing the **Medallion Architecture** (`Bronze
 ## 📁 Repository Structure
 
 ```
-yipit/
+yippi/
 ├── medallion/                         # ⚙️ Core Medallion Architecture Python Package
 │   ├── __init__.py                    # Exposes pipeline APIs
 │   ├── bronze.py                      # Bronze layer: Ingestion & schema validation
@@ -35,12 +35,12 @@ yipit/
 ├── advanced_semantic_search/          # 🤖 Advanced Vector Search & Embeddings Module
 │   ├── semantic_search.ipynb          # Cosine similarity, vector search & hybrid filtering
 │   ├── README.md                      # Semantic search documentation
-│   └── data/embeddings/              # Pre-computed dense vector matrix (.npy)
+│   └── data/embeddings/               # Pre-computed dense vector matrix (.npy)
 │
 ├── pipeline.py                        # 🚀 End-to-end CLI pipeline orchestrator
 ├── DATA_ARCHITECTURE.md               # Dimensional star schema specifications & governance
 ├── README.md                          # Documentation and portfolio guide
-├── Task.txt                          # Project specification document
+├── Task.txt                           # Project specification document
 ├── requirements.txt                   # Pinned Python dependencies
 ├── .gitignore                         # Git exclusion rules for clean commits
 │

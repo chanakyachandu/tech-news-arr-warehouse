@@ -109,3 +109,38 @@ Include these columns:
 Export each modeled data warehouse table as its own CSV file (e.g., a separate file for your company dimension). A local DuckDB database is optional, but the per-table CSV exports are required. The exported tables should include enough modeled article, company, and ARR-observation data to inspect lineage, debug failed parses, and query ARR over time.
 
 The AI article CSV is a required downstream export. It does not replace the modeled table CSVs.
+
+4. Natural Language to SQL Assistant ("DataTalker AI" / Text-to-SQL)
+Build a local, interactive conversational Text-to-SQL agent that allows users to query the modeled DuckDB analytical warehouse using plain English.
+
+Requirements:
+
+Schema Context Injection:
+● Dynamically inspect and extract schemas, column descriptions, and sample records for the modeled warehouse tables:
+  - dim_company: company identity, industry, headcount, public status, headquarters
+  - fct_arr_observation: historical revenue observations, currencies, confidence, source links
+  - fct_article: news publication dates, normalized categories, summaries, URLs
+  - agg_company_quarterly_arr: quarterly revenue rollups
+  - view_company_latest_arr: latest point-in-time ARR per company
+● Format schema metadata into an LLM system prompt without exceeding token limits.
+
+Natural Language Query Translation:
+● Convert user business questions into valid DuckDB SQL queries using Gemini API.
+● Support multi-table joins, date filtering, aggregations, and ranking queries:
+  - "Which company has the highest ARR in the AI/ML industry?"
+  - "Show the quarterly ARR growth trend for OpenAI."
+  - "What are the top 5 companies by total news article count?"
+  - "Find the source article link for Databricks' latest revenue announcement."
+
+Production SQL Safety Guardrails:
+● Strictly enforce Read-Only execution: reject any query containing DROP, DELETE, UPDATE, INSERT, ALTER, or EXECUTE.
+● Automatically enforce a LIMIT clause (default 50 rows) to prevent out-of-memory errors on unconstrained queries.
+● Implement automatic self-correction / error retry: if DuckDB throws a syntax or unknown-column error, feed the error trace back to the LLM to generate a corrected query.
+
+Execution & Result Presentation:
+● Execute the verified query against the local DuckDB database.
+● Format tabular results cleanly in the terminal console.
+● Return a 2-sentence executive summary answering the user's question directly in plain English.
+
+Interactive Terminal Interface:
+● Provide an interactive CLI loop (`python ai_text_to_sql.py`) where users can chat with the data warehouse in real time.
