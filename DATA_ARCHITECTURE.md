@@ -1,167 +1,145 @@
-# 🏛️ Data Architecture & Governance: Tech News & ARR Warehouse
+# 🏛️ Data Architecture: Tech News & ARR Data Platform
 
-## 1. Architecture Overview & Medallion Design
-This data platform implements a production-grade **Medallion Architecture** (`Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold`) designed for financial metric extraction, entity canonicalization, and dimensional modeling.
+## 1. Architecture Overview (Medallion Design)
+This platform processes unstructured tech news and company metadata into an analytical warehouse using the **Medallion Architecture** (`Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold`):
 
 ```
-       +---------------------------------------------+
-       |                BRONZE LAYER                 |
-       |  Source CSVs Ingestion & Metadata Loading   |
-       |  - Append raw data from source/ & data/raw/ |
-       |  - Load canonical company_metadata.json     |
-       |  - Ingest with zero destructive mutations   |
-       +---------------------------------------------+
-                              |
-                              v
-       +---------------------------------------------+
-       |                SILVER LAYER                 |
-       |  Data Cleaning, Standardization & Joins     |
-       |  - 46 -> 21 Company Alias Canonicalization  |
-       |  - Flag 5 Unmatched Companies (False flag)  |
-       |  - 19 -> 7 Taxonomy Category Mapping        |
-       |  - Multi-Currency FX to USD (EUR, GBP, JPY) |
-       |  - Date Parsing to dd-mm-yyyy + Year/Qtr    |
-       |  - Feature Engineering: age & size category |
-       +---------------------------------------------+
-                              |
-                              v
-       +---------------------------------------------+
-       |                 GOLD LAYER                  |
-       |  Dimensional Warehouse & Analytical Tables  |
-       |  - dim_company (Company Dimension: N = 26)  |
-       |  - fct_article (Article Fact: N = 750)      |
-       |  - fct_arr_observation (ARR Fact: N = 558)  |
-       |  - agg_company_quarterly_arr (Rollup: N=315)|
-       |  - view_company_latest_arr (Snapshot: N=26) |
-       |  - ai_articles_enriched (Deliverable: N=124)|
-       +---------------------------------------------+
+[ BRONZE LAYER: Raw Ingestion ]
+  - Ingest raw source files (tech_news.csv, company_metadata.json) as-is.
+  - Zero mutations; preserves full historical lineage.
+          │
+          ▼
+[ SILVER LAYER: Cleaning & Enrichment ]
+  - Canonicalize company name aliases (e.g. AWS -> Amazon Web Services).
+  - Standardize 19 messy categories into 7 clean taxonomy values (e.g. AI_ML).
+  - Parse multi-currency revenue (EUR, GBP, JPY, ranges) into normalized USD integers.
+  - Standardize dates into ISO / dd-mm-yyyy and extract year & quarter.
+  - Calculate company age and company size category (Small, Medium, Large).
+          │
+          ▼
+[ GOLD LAYER: Star Schema Warehouse ]
+  - Structured into 1 Dimension and 2 Fact tables for fast SQL analytics:
+    * dim_company (Master company dimension)
+    * fct_article (All news articles with standardized dates & categories)
+    * fct_arr_observation (Point-in-time revenue observations over time)
+    * agg_company_quarterly_arr (Pre-computed quarterly rollups)
+    * view_company_latest_arr (Latest point-in-time snapshot per company)
+    * ai_articles_enriched.csv (Filtered export: AI/ML, 2022–2024, ARR > $50M)
 ```
 
 ---
 
 ## 2. Dimensional Data Model & Table Specifications
 
-The Gold Layer is structured as an analytical **Star Schema** with deterministic surrogate keys (`company_id`, `observation_id`):
+### A. Raw Source Columns (Input Data)
+The pipeline starts with raw tech news articles containing these 10 core columns:
+
+| Raw Column | Description & Examples | Where It Maps in the Gold Model |
+| :--- | :--- | :--- |
+| **`article_id`** | Unique article identifier (`ART0001`, `ART0002`) | Primary Key in `fct_article`, Foreign Key in `fct_arr_observation` |
+| **`title`** | News headline text | Preserved in `fct_article.title` |
+| **`company_name`** | Mentioned company name (includes aliases like AWS) | Canonicalized & linked via `company_id` to `dim_company` |
+| **`published_date`** | Messy dates (`21-Feb-20`, `02/23/2023`, `13-12-2023`) | Parsed to datetime $\rightarrow$ `fct_article.published_date` (`dd-mm-yyyy`) |
+| **`category`** | Unstandardized category (`Artificial Intelligence`, `AI/ML`) | Standardized $\rightarrow$ `fct_article.category_clean` (`AI_ML`) |
+| **`revenue`** | Raw revenue strings (`$980.0M`, `£244M`, `$10M - $20M`) | Parsed to normalized USD $\rightarrow$ `fct_arr_observation.arr_usd` |
+| **`summary`** | Article executive brief | Preserved in `fct_article.summary` |
+| **`url`** | Source article URL link | Preserved in `fct_article.url` for provenance |
+| **`author`** | Journalist / reporter name | Preserved in `fct_article.author` |
+| **`word_count`** | Article word length integer | Preserved in `fct_article.word_count` |
+
+*(Enriched by `company_metadata.json`: `founded_year`, `headquarters`, `employee_count`, `industry`, `is_public`, `stock_ticker`)*
+
+---
+
+### B. The Modeled Star Schema
+To eliminate data redundancy and enable fast analytical SQL queries, the raw input columns are separated into a clean **Star Schema**:
 
 ```
-       +------------------------------------+
-       |            dim_company             |
-       +------------------------------------+
-       | PK company_id (COMP001, ...)       |
-       |    company_name                    |
-       |    industry                        |
-       |    headquarters                    |
-       |    founded_year                    |
-       |    employee_count                  |
-       |    company_size_category           |
-       |    is_public                       |
-       |    stock_ticker                    |
-       |    has_company_metadata            |
-       +------------------------------------+
-                |                   |
-        1:N     |                   | 1:N
-                v                   v
+                 +--------------------------------------+
+                 |             dim_company              |
+                 +--------------------------------------+
+                 | PK company_id (COMP001, ...)         |
+                 |    company_name                      |
+                 |    industry                          |
+                 |    headquarters                      |
+                 |    founded_year                      |
+                 |    employee_count                    |
+                 |    company_size_category (Small/M/L) |
+                 |    is_public (True / False)          |
+                 |    stock_ticker                      |
+                 |    has_company_metadata              |
+                 +--------------------------------------+
+                        |                       |
+               1-to-Many|               1-to-Many
+                        v                       v
 +-------------------------------+   +------------------------------------+
 |          fct_article          |   |        fct_arr_observation         |
 +-------------------------------+   +------------------------------------+
 | PK article_id (ART0001, ...)  |   | PK observation_id (ARR0001, ...)   |
-|    original_index             |   | FK article_id                      |
-| FK company_id                 |   | FK company_id                      |
-|    title                      |   |    observation_date (dd-mm-yyyy)   |
-|    category                   |   |    observation_year                |
-|    category_clean             |   |    observation_quarter             |
-|    author                     |   |    observation_year_month          |
-|    published_date (dd-mm-yyyy)|   |    arr_usd_M (Int64 Millions)      |
-|    published_year             |   |    arr_usd (Int64 Exact Dollars)   |
-|    published_quarter          |   +------------------------------------+
-|    published_month            |
-|    published_year_month       |
+| FK company_id                 |   | FK article_id                      |
+|    title                      |   | FK company_id                      |
+|    category_clean             |   |    observation_date (dd-mm-yyyy)   |
+|    published_date (dd-mm-yyyy)|   |    observation_year                |
+|    published_year             |   |    observation_quarter             |
+|    published_quarter          |   |    arr_usd (Normalized Integer $)  |
+|    published_month            |   |    arr_usd_M (ARR in Millions)     |
+|    author                     |   +------------------------------------+
 |    word_count                 |
 |    summary                    |
 |    url                        |
 +-------------------------------+
 ```
 
-### Table Grains & Key Designations:
-1. **`dim_company`**
-   * **Grain**: Exactly 1 row per canonical company ($N = 26$).
-   * **Primary Key**: `company_id` (`COMP001`, `COMP002`, ...).
-   * **Surrogate Key Rationale**: Decouples analytical pipelines from future company rebranding or mergers.
-   * **Unmatched Companies Handling**: Companies present in articles but absent from the seed metadata (Cohere, Hugging Face, Mistral AI, Perplexity AI, xAI) are preserved with `has_company_metadata = False`.
+---
 
-2. **`fct_article`**
-   * **Grain**: Exactly 1 row per tech news article ($N = 750$).
-   * **Primary Key**: `article_id` (`ART0001`, `ART0002`, ...).
-   * **Foreign Keys**: `company_id` referencing `dim_company`.
+### C. Table Grains & Key Responsibilities
 
-3. **`fct_arr_observation`**
-   * **Grain**: Exactly 1 row per valid financial revenue/ARR point-in-time observation ($N = 558$).
-   * **Primary Key**: `observation_id` (`ARR0001`, `ARR0002`, ...).
-   * **Foreign Keys**: `article_id` referencing `fct_article`, `company_id` referencing `dim_company`.
-   * **Missing/Undisclosed Handling**: Articles with undisclosed or unparseable revenue are preserved in `fct_article` with null revenue, but excluded from `fct_arr_observation` so non-observations do not distort financial aggregations.
+1. **`dim_company`** (26 rows)
+   * **Grain**: 1 row per unique canonical company.
+   * **Keys**: Primary Key = `company_id` (`COMP001`, `COMP002`, ...).
+   * **Role**: Holds static company metadata (headquarters, employee count, industry, size category).
 
-4. **`agg_company_quarterly_arr`**
-   * **Grain**: 1 row per company per calendar year-quarter ($N = 315$).
-   * **Calculations**: `observations_count`, `latest_arr_usd_M`, `avg_arr_usd_M`, `max_arr_usd_M`, `min_arr_usd_M`.
+2. **`fct_article`** (750 rows)
+   * **Grain**: 1 row per published news article.
+   * **Keys**: Primary Key = `article_id`, Foreign Key = `company_id`.
+   * **Role**: Stores article content, publication dates, cleaned categories, authors, and source URLs.
 
-5. **`view_company_latest_arr`**
-   * **Grain**: 1 row per company showing the most recent ARR observation available ($N = 26$).
+3. **`fct_arr_observation`** (558 rows)
+   * **Grain**: 1 row per valid revenue/ARR observation.
+   * **Keys**: Primary Key = `observation_id`, Foreign Keys = `article_id`, `company_id`.
+   * **Role**: Stores point-in-time financial observations converted to exact USD integers. Articles with missing or undisclosed revenue are excluded to avoid distorting averages.
 
-6. **`ai_articles_enriched.csv`**
-   * **Grain**: 1 row per filtered high-growth AI article ($N = 124$).
-   * **Filters**: Category AI/ML OR Industry AI/ML, published 2022–2024, valid ARR > $50M USD. Contains 17 required columns.
+4. **`agg_company_quarterly_arr`** (315 rows)
+   * **Grain**: 1 row per company per calendar quarter.
+   * **Role**: Pre-aggregated rollups (`latest_arr_usd_M`, `avg_arr_usd_M`, `max_arr_usd_M`, `min_arr_usd_M`).
+
+5. **`view_company_latest_arr`** (26 rows)
+   * **Grain**: 1 row per company.
+   * **Role**: Latest point-in-time ARR snapshot for each company.
+
+6. **`ai_articles_enriched.csv`** (124 rows)
+   * **Grain**: 1 row per high-growth AI article.
+   * **Role**: Final business deliverable filtered for AI/ML category or industry, published 2022–2024, with ARR > $50M.
 
 ---
 
-## 3. Data Governance & Critical Principles
+## 3. Core Business & Cleaning Rules
 
-### ⚠️ Article ARR is NOT Master Data
-A foundational governance rule enforced throughout this pipeline:
-> **"Do not treat article ARR values as company master data without source lineage and caveats."**
+1. **Multi-Currency Normalization to USD**:
+   * `EUR` $\times$ 1.10 = USD
+   * `GBP` $\times$ 1.27 = USD
+   * `JPY` $\div$ 150 = USD
+   * Revenue ranges (e.g. `"$10M - $20M"`) are calculated by taking the midpoint (`$15,000,000`).
+   * Output values are stored as exact integers (`arr_usd`) and millions (`arr_usd_M`).
 
-* **Why?** News articles report estimated, forward-looking, leaked, or annualized run rates that may contradict official SEC filings, press releases, or subsequent quarters.
-* **Our Implementation**:
-  1. Financial metrics are modeled as discrete **temporal point-in-time observations** (`fct_arr_observation`), never static attributes on `dim_company`.
-  2. Every ARR observation retains explicit **source lineage** back to `article_id`, publication timestamp, author, and source URL.
-  3. Missing or undisclosed revenue values are preserved as nulls (`<NA>`) and excluded from financial observations so averages are not skewed by artificial zeroes.
+2. **Article ARR is NOT Company Master Data**:
+   * News articles report estimated, forward-looking, or leaked revenue that may conflict with audited reports.
+   * Therefore, revenue is modeled as **point-in-time observations** (`fct_arr_observation`) with full lineage back to the source article, rather than a single static field on `dim_company`.
 
----
+3. **Missing & Undisclosed Revenue**:
+   * Missing revenue values are preserved as nulls in `fct_article`, but completely excluded from `fct_arr_observation` so they never introduce false zeroes into financial averages.
 
-## 4. Engineering Design Choices & Trade-offs
-
-1. **Modular Medallion Architecture (`medallion/`)**:
-   * *Decision*: Decomposed monolithic pipeline into `bronze.py`, `silver.py`, and `gold.py`.
-   * *Trade-off*: Slightly more files, but achieves enterprise maintainability, independent testing, and clear data lineage.
-2. **Surrogate Keys vs Natural Keys**:
-   * *Decision*: Assigned deterministic surrogate keys (`COMP001`, `ARR0001`).
-   * *Trade-off*: Adds an ID assignment step, but ensures fast integer joins and prevents breakage when companies rebrand or merge.
-3. **Nullable Types (`Int64`, `boolean`)**:
-   * *Decision*: Enforced pandas nullable integer types across all IDs, years, employee counts, and ages.
-   * *Trade-off*: Avoids unwanted float conversion (`2022.0`), maintaining strict warehouse data integrity.
-
----
-
-## 5. Production Cloud Scaling & Idempotency
-
-```
- +------------------+     +------------------+     +-------------------+
- |  Kafka / Kinesis | --> |  Airflow / Prefect| -->|  Databricks / EMR |
- |  (Streaming Ingest)    |  (Orchestration) |     |  (Spark / Delta)  |
- +------------------+     +------------------+     +-------------------+
-                                                               |
-                                                               v
-                        +-----------------------------------------------+
-                        |  Iceberg / Delta Lake / Snowflake / BigQuery  |
-                        +-----------------------------------------------+
-```
-
-1. **Idempotent Backfills & Deduplication**:
-   - All surrogate keys (`company_id`, `observation_id`) and natural keys (`article_id`) are generated deterministically.
-   - Ingestion uses `MERGE INTO` (upsert) logic keyed on `article_id` and content hash (`SHA-256(title + url)`), ensuring that re-running pipelines produces **zero duplicate records**.
-
-2. **Schema Evolution Handling**:
-   - **Silver Layer Contract**: Employs explicit column selection and typed casting with nullable integer (`Int64`) and boolean support.
-   - New metadata columns in source JSON/CSVs are dynamically captured without breaking existing relational schemas.
-
-3. **Automated Quality SLA Monitoring**:
-   - Pytest suite (`tests/test_pipeline.py`) validates 100% metadata join coverage, range midpoint arithmetic, foreign key referential integrity, and required export filters.
+4. **Company Size Thresholds**:
+   * **Small**: $< 10,000$ employees
+   * **Medium**: $10,000$ – $30,000$ employees
+   * **Large**: $> 30,000$ employees
