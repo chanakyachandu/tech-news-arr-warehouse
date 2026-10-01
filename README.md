@@ -24,8 +24,6 @@ yippi/
 │   └── gold.py                        # Gold layer: Star schema modeling, rollups & exports
 │
 ├── notebooks/                         # 📓 Interactive Walkthrough & Demonstration Notebooks
-│   ├── python_syntax_guide.ipynb      # 🐍 Python Syntax Guide (Index & Executable cells)
-│   ├── sql_syntax_guide.ipynb         # 🗄️ SQL Syntax Guide (Index & Executable queries)
 │   ├── 01_bronze.ipynb                # Ingestion & raw data profiling
 │   ├── 02_silver.ipynb                # Cleaning, FX normalization & entity resolution
 │   ├── 03_gold.ipynb                  # Relational star schema warehouse & aggregations
