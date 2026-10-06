@@ -16,7 +16,7 @@ multi-currency ARR normalization, dimensional star-schema modeling, and an inter
 ## 📁 Repository Structure
 
 ```
-yippi/
+tech-news-arr-warehouse/
 ├── medallion/                         # ⚙️ Core Medallion Architecture Python Package
 │   ├── __init__.py                    # Exposes pipeline APIs
 │   ├── bronze.py                      # Bronze layer: Ingestion & schema validation

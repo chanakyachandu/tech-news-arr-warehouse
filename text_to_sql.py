@@ -1,7 +1,7 @@
 """
 text_to_sql.py - Root Launcher for DataTalker AI Text-to-SQL Assistant.
 Run with:
-  "c:\\Users\\sivak\\OneDrive\\Pictures\\blank_backup\\.venv\\Scripts\\python.exe" "Fabric\\yippi\\text_to_sql.py"
+  python text_to_sql.py
 """
 
 import os
