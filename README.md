@@ -1,15 +1,52 @@
 # 📰 Tech News & ARR Analytical Data Platform
 
-[![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
+[![CI](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml/badge.svg)](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![Arch](https://img.shields.io/badge/Architecture-Medallion-orange.svg)](DATA_ARCHITECTURE.md)
-[![Schema](https://img.shields.io/badge/Warehouse-Star-green.svg)](DATA_ARCHITECTURE.md)
+[![Schema](https://img.shields.io/badge/Warehouse-Star%20Schema-green.svg)](DATA_ARCHITECTURE.md)
 [![Tests](https://img.shields.io/badge/Tests-12%20Passing-brightgreen.svg)](tests/test_pipeline.py)
 [![SQL](https://img.shields.io/badge/Engine-DuckDB-yellow.svg)](notebooks/04_sql_queries.ipynb)
 
 An end-to-end data platform implementing the **Medallion Architecture**
 (`Bronze` ──► `Silver` ──► `Gold`) for tech news ingestion, company entity resolution,
 multi-currency ARR normalization, dimensional star-schema modeling, and an interactive
-**Natural Language to SQL Assistant**.
+**Natural Language to SQL Assistant** ("DataTalker AI") with AST safety guardrails.
+
+```mermaid
+flowchart TD
+    subgraph Sources["📥 Raw Ingestion Sources"]
+        RAW_CSV["tech_news.csv (750 Articles)"]
+        RAW_JSON["company_metadata.json (21 Seed Companies)"]
+    end
+
+    subgraph Medallion["⚙️ Medallion Architecture Pipeline"]
+        B["🥉 BRONZE: Raw Ingestion & Schema Profiling"]
+        S["🥈 SILVER: FX Normalization (EUR/GBP/JPY to USD) + Entity Resolution (46 -> 21)"]
+        G["🥇 GOLD: Star-Schema Dimensional Relational Tables"]
+        B --> S --> G
+    end
+
+    Sources --> B
+
+    subgraph GoldWarehouse["🏛️ Star Schema Warehouse (DuckDB)"]
+        DIM_COMP["dim_company (26 Entities)"]
+        FCT_ART["fct_article (750 Articles)"]
+        FCT_ARR["fct_arr_observation (558 Observations)"]
+        AGG_QTR["agg_company_quarterly_arr (315 Rollups)"]
+        VIEW_ARR["view_company_latest_arr (Latest Snapshots)"]
+        DELIV["ai_articles_enriched.csv (124 Filtered Records)"]
+    end
+
+    G --> GoldWarehouse
+
+    subgraph DownstreamApps["🤖 Downstream AI & Analytical Applications"]
+        VEC["🧠 Semantic Search (Cosine Similarity + 384d Vectors)"]
+        TALKER["💬 DataTalker AI: Text-to-SQL + AST Guardrails + Executive Summary"]
+    end
+
+    GoldWarehouse --> VEC
+    GoldWarehouse --> TALKER
+```
 
 ---
 
@@ -289,6 +326,18 @@ Here is how data flows through the platform from raw source files to analytical 
 ### Installation
 Clone the repository and install dependencies:
 ```bash
+git clone https://github.com/chanakyachandu/tech-news-arr-warehouse.git
+cd tech-news-arr-warehouse
+
+# Virtual environment setup
+python -m venv .venv
+
+# Windows:
+.venv\Scripts\activate
+
+# macOS / Linux:
+source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
