@@ -1,32 +1,44 @@
-# 📰 Tech News & ARR Analytical Data Platform
+# 📰 Tech News & ARR Analytical Data Platform (Batch & Real-Time CDC Lakehouse)
 
 [![CI](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml/badge.svg)](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
-[![Arch](https://img.shields.io/badge/Architecture-Medallion-orange.svg)](DATA_ARCHITECTURE.md)
+[![Arch](https://img.shields.io/badge/Architecture-Medallion%20%2B%20Streaming%20CDC-orange.svg)](DATA_ARCHITECTURE.md)
 [![Schema](https://img.shields.io/badge/Warehouse-Star%20Schema-green.svg)](DATA_ARCHITECTURE.md)
-[![Tests](https://img.shields.io/badge/Tests-12%20Passing-brightgreen.svg)](tests/test_pipeline.py)
+[![Tests](https://img.shields.io/badge/Tests-17%20Passing-brightgreen.svg)](tests/)
 [![SQL](https://img.shields.io/badge/Engine-DuckDB-yellow.svg)](notebooks/04_sql_queries.ipynb)
 
-An end-to-end data platform implementing the **Medallion Architecture**
-(`Bronze` ──► `Silver` ──► `Gold`) for tech news ingestion, company entity resolution,
+An end-to-end data platform implementing **Dual-Mode Batch Medallion Architecture**
+(`Bronze` ──► `Silver` ──► `Gold`) and **Real-Time Streaming CDC Engine** (Event-Time Watermarking,
+Dead-Letter Queue `DLQ`, and atomic `MERGE INTO` reconciliation) for tech news ingestion, company entity resolution,
 multi-currency ARR normalization, dimensional star-schema modeling, and an interactive
 **Natural Language to SQL Assistant** ("DataTalker AI") with AST safety guardrails.
 
 ```mermaid
 flowchart TD
-    subgraph Sources["📥 Raw Ingestion Sources"]
+    subgraph Sources["📥 Ingestion Sources"]
         RAW_CSV["tech_news.csv (750 Articles)"]
         RAW_JSON["company_metadata.json (21 Seed Companies)"]
+        STREAM_IN["Real-Time JSON Stream Landing (stream_landing/)"]
     end
 
-    subgraph Medallion["⚙️ Medallion Architecture Pipeline"]
+    subgraph BatchMedallion["⚙️ Batch Medallion Pipeline"]
         B["🥉 BRONZE: Raw Ingestion & Schema Profiling"]
         S["🥈 SILVER: FX Normalization (EUR/GBP/JPY to USD) + Entity Resolution (46 -> 21)"]
         G["🥇 GOLD: Star-Schema Dimensional Relational Tables"]
         B --> S --> G
     end
 
+    subgraph StreamingCDC["⚡ Real-Time Streaming & CDC Engine"]
+        VAL["Schema Validation & Event Parser"]
+        WM["Event-Time Watermark Filter (Late Dropped)"]
+        DLQ["Dead-Letter Queue (data/dead_letter_queue/)"]
+        MERGE["Atomic MERGE INTO Reconciliation (I / U / D)"]
+        VAL -->|Valid & On-Time| WM --> MERGE
+        VAL -->|Corrupted Payload| DLQ
+    end
+
     Sources --> B
+    STREAM_IN --> VAL
 
     subgraph GoldWarehouse["🏛️ Star Schema Warehouse (DuckDB)"]
         DIM_COMP["dim_company (26 Entities)"]
@@ -38,6 +50,7 @@ flowchart TD
     end
 
     G --> GoldWarehouse
+    MERGE --> GoldWarehouse
 
     subgraph DownstreamApps["🤖 Downstream AI & Analytical Applications"]
         VEC["🧠 Semantic Search (Cosine Similarity + 384d Vectors)"]
@@ -58,14 +71,16 @@ tech-news-arr-warehouse/
 │   ├── __init__.py                    # Exposes pipeline APIs
 │   ├── bronze.py                      # Bronze layer: Ingestion & schema validation
 │   ├── silver.py                      # Silver layer: Cleaning, entity resolution & enrichment
-│   └── gold.py                        # Gold layer: Star schema modeling, rollups & exports
+│   ├── gold.py                        # Gold layer: Star schema modeling, rollups & exports
+│   └── streaming_cdc.py               # ⚡ Real-Time Streaming, Watermarking, DLQ & CDC MERGE
 │
 ├── notebooks/                         # 📓 Interactive Walkthrough & Demonstration Notebooks
 │   ├── 01_bronze.ipynb                # Ingestion & raw data profiling
 │   ├── 02_silver.ipynb                # Cleaning, FX normalization & entity resolution
 │   ├── 03_gold.ipynb                  # Relational star schema warehouse & aggregations
 │   ├── 04_sql_queries.ipynb           # SQL analytics (DuckDB & SQLite) over warehouse tables
-│   └── 05_ai_text_to_sql.ipynb        # 🤖 Interactive AI Text-to-SQL Assistant Walkthrough
+│   ├── 05_ai_text_to_sql.ipynb        # 🤖 Interactive AI Text-to-SQL Assistant Walkthrough
+│   └── 06_realtime_cdc_streaming.ipynb# ⚡ Real-Time Streaming & CDC Reconciliation Walkthrough
 │
 ├── ai_text_to_sql/                    # 🤖 Natural Language to SQL Assistant Package
 │   ├── __init__.py
@@ -74,9 +89,10 @@ tech-news-arr-warehouse/
 │   ├── sql_generator.py               # Gemini AI SQL generator & executive result explainer
 │   └── cli.py                         # Interactive terminal loop
 │
-├── tests/                             # 🧪 Automated Test Suite (pytest)
+├── tests/                             # 🧪 Automated Test Suite (pytest - 17 Tests)
 │   ├── __init__.py
-│   └── test_pipeline.py               # Data quality, FX math, table grain & referential integrity
+│   ├── test_pipeline.py               # Batch Data quality, FX math & referential integrity (12 Tests)
+│   └── test_streaming_cdc.py          # Streaming, Watermark, DLQ & CDC reconciliation (5 Tests)
 │
 ├── advanced_semantic_search/          # 🤖 Advanced Vector Search & Embeddings Module
 │   ├── semantic_search.ipynb          # Cosine similarity, vector search & hybrid filtering
@@ -97,6 +113,8 @@ tech-news-arr-warehouse/
     │   └── company_metadata.json      # 21 seed companies metadata
     ├── processed/                     # Cleaned Silver dataset
     │   └── tech_news_clean.csv        # Cleaned, standardized articles
+    ├── stream_landing/                # ⚡ Real-time JSON micro-batch landing zone
+    ├── dead_letter_queue/             # ⚡ Quarantined corrupt event records (DLQ)
     └── warehouse/                     # Gold relational warehouse tables & deliverables
         ├── dim_company.csv            # Company dimension (N = 26)
         ├── fct_article.csv            # Article fact table (N = 750)
