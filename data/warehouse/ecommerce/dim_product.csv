@@ -1,0 +1,78 @@
+product_sk,product_id,product_name,category_name,category_description,quantity_per_unit,unit_price,units_in_stock,units_on_order,reorder_level,is_discontinued,stock_status
+PROD_SK_001,1,Chai,Beverages,Soft drinks coffees teas beers and ales,10 boxes x 20 bags,18.0,39,0,10,False,In Stock
+PROD_SK_002,2,Chang,Beverages,Soft drinks coffees teas beers and ales,24 - 12 oz bottles,19.0,17,40,25,False,Low Stock
+PROD_SK_003,3,Aniseed Syrup,Condiments,Sweet and savory sauces relishes spreads and seasonings,12 - 550 ml bottles,10.0,13,70,25,False,Low Stock
+PROD_SK_004,4,Chef Anton's Cajun Seasoning,Condiments,Sweet and savory sauces relishes spreads and seasonings,48 - 6 oz jars,22.0,53,0,0,False,In Stock
+PROD_SK_005,5,Chef Anton's Gumbo Mix,Condiments,Sweet and savory sauces relishes spreads and seasonings,36 boxes,21.35,0,0,0,True,Out of Stock
+PROD_SK_006,6,Grandma's Boysenberry Spread,Condiments,Sweet and savory sauces relishes spreads and seasonings,12 - 8 oz jars,25.0,120,0,25,False,In Stock
+PROD_SK_007,7,Uncle Bob's Organic Dried Pears,Produce,Dried fruit and bean curd,12 - 1 lb pkgs.,30.0,15,0,10,False,In Stock
+PROD_SK_008,8,Northwoods Cranberry Sauce,Condiments,Sweet and savory sauces relishes spreads and seasonings,12 - 12 oz jars,40.0,6,0,0,False,In Stock
+PROD_SK_009,9,Mishi Kobe Niku,Meat/Poultry,Prepared meats,18 - 500 g pkgs.,97.0,29,0,0,True,In Stock
+PROD_SK_010,10,Ikura,Seafood,Seaweed and fish,12 - 200 ml jars,31.0,31,0,0,False,In Stock
+PROD_SK_011,11,Queso Cabrales,Dairy Products,Cheeses,1 kg pkg.,21.0,22,30,30,False,Low Stock
+PROD_SK_012,12,Queso Manchego La Pastora,Dairy Products,Cheeses,10 - 500 g pkgs.,38.0,86,0,0,False,In Stock
+PROD_SK_013,13,Konbu,Seafood,Seaweed and fish,2 kg box,6.0,24,0,5,False,In Stock
+PROD_SK_014,14,Tofu,Produce,Dried fruit and bean curd,40 - 100 g pkgs.,23.25,35,0,0,False,In Stock
+PROD_SK_015,15,Genen Shouyu,Condiments,Sweet and savory sauces relishes spreads and seasonings,24 - 250 ml bottles,15.5,39,0,5,False,In Stock
+PROD_SK_016,16,Pavlova,Confections,Desserts candies and sweet breads,32 - 500 g boxes,17.45,29,0,10,False,In Stock
+PROD_SK_017,17,Alice Mutton,Meat/Poultry,Prepared meats,20 - 1 kg tins,39.0,0,0,0,True,Out of Stock
+PROD_SK_018,18,Carnarvon Tigers,Seafood,Seaweed and fish,16 kg pkg.,62.5,42,0,0,False,In Stock
+PROD_SK_019,19,Teatime Chocolate Biscuits,Confections,Desserts candies and sweet breads,10 boxes x 12 pieces,9.2,25,0,5,False,In Stock
+PROD_SK_020,20,Sir Rodney's Marmalade,Confections,Desserts candies and sweet breads,30 gift boxes,81.0,40,0,0,False,In Stock
+PROD_SK_021,21,Sir Rodney's Scones,Confections,Desserts candies and sweet breads,24 pkgs. x 4 pieces,10.0,3,40,5,False,Low Stock
+PROD_SK_022,22,Gustaf's Knäckebröd,Grains/Cereals,Breads crackers pasta and cereal,24 - 500 g pkgs.,21.0,104,0,25,False,In Stock
+PROD_SK_023,23,Tunnbröd,Grains/Cereals,Breads crackers pasta and cereal,12 - 250 g pkgs.,9.0,61,0,25,False,In Stock
+PROD_SK_024,24,Guaraná Fantástica,Beverages,Soft drinks coffees teas beers and ales,12 - 355 ml cans,4.5,20,0,0,True,In Stock
+PROD_SK_025,25,NuNuCa Nuß-Nougat-Creme,Confections,Desserts candies and sweet breads,20 - 450 g glasses,14.0,76,0,30,False,In Stock
+PROD_SK_026,26,Gumbär Gummibärchen,Confections,Desserts candies and sweet breads,100 - 250 g bags,31.23,15,0,0,False,In Stock
+PROD_SK_027,27,Schoggi Schokolade,Confections,Desserts candies and sweet breads,100 - 100 g pieces,43.9,49,0,30,False,In Stock
+PROD_SK_028,28,Rössle Sauerkraut,Produce,Dried fruit and bean curd,25 - 825 g cans,45.6,26,0,0,True,In Stock
+PROD_SK_029,29,Thüringer Rostbratwurst,Meat/Poultry,Prepared meats,50 bags x 30 sausgs.,123.79,0,0,0,True,Out of Stock
+PROD_SK_030,30,Nord-Ost Matjeshering,Seafood,Seaweed and fish,10 - 200 g glasses,25.89,10,0,15,False,Low Stock
+PROD_SK_031,31,Gorgonzola Telino,Dairy Products,Cheeses,12 - 100 g pkgs,12.5,0,70,20,False,Out of Stock
+PROD_SK_032,32,Mascarpone Fabioli,Dairy Products,Cheeses,24 - 200 g pkgs.,32.0,9,40,25,False,Low Stock
+PROD_SK_033,33,Geitost,Dairy Products,Cheeses,500 g,2.5,112,0,20,False,In Stock
+PROD_SK_034,34,Sasquatch Ale,Beverages,Soft drinks coffees teas beers and ales,24 - 12 oz bottles,14.0,111,0,15,False,In Stock
+PROD_SK_035,35,Steeleye Stout,Beverages,Soft drinks coffees teas beers and ales,24 - 12 oz bottles,18.0,20,0,15,False,In Stock
+PROD_SK_036,36,Inlagd Sill,Seafood,Seaweed and fish,24 - 250 g  jars,19.0,112,0,20,False,In Stock
+PROD_SK_037,37,Gravad lax,Seafood,Seaweed and fish,12 - 500 g pkgs.,26.0,11,50,25,False,Low Stock
+PROD_SK_038,38,Côte de Blaye,Beverages,Soft drinks coffees teas beers and ales,12 - 75 cl bottles,263.5,17,0,15,False,In Stock
+PROD_SK_039,39,Chartreuse verte,Beverages,Soft drinks coffees teas beers and ales,750 cc per bottle,18.0,69,0,5,False,In Stock
+PROD_SK_040,40,Boston Crab Meat,Seafood,Seaweed and fish,24 - 4 oz tins,18.4,123,0,30,False,In Stock
+PROD_SK_041,41,Jack's New England Clam Chowder,Seafood,Seaweed and fish,12 - 12 oz cans,9.65,85,0,10,False,In Stock
+PROD_SK_042,42,Singaporean Hokkien Fried Mee,Grains/Cereals,Breads crackers pasta and cereal,32 - 1 kg pkgs.,14.0,26,0,0,True,In Stock
+PROD_SK_043,43,Ipoh Coffee,Beverages,Soft drinks coffees teas beers and ales,16 - 500 g tins,46.0,17,10,25,False,Low Stock
+PROD_SK_044,44,Gula Malacca,Condiments,Sweet and savory sauces relishes spreads and seasonings,20 - 2 kg bags,19.45,27,0,15,False,In Stock
+PROD_SK_045,45,Rogede sild,Seafood,Seaweed and fish,1k pkg.,9.5,5,70,15,False,Low Stock
+PROD_SK_046,46,Spegesild,Seafood,Seaweed and fish,4 - 450 g glasses,12.0,95,0,0,False,In Stock
+PROD_SK_047,47,Zaanse koeken,Confections,Desserts candies and sweet breads,10 - 4 oz boxes,9.5,36,0,0,False,In Stock
+PROD_SK_048,48,Chocolade,Confections,Desserts candies and sweet breads,10 pkgs.,12.75,15,70,25,False,Low Stock
+PROD_SK_049,49,Maxilaku,Confections,Desserts candies and sweet breads,24 - 50 g pkgs.,20.0,10,60,15,False,Low Stock
+PROD_SK_050,50,Valkoinen suklaa,Confections,Desserts candies and sweet breads,12 - 100 g bars,16.25,65,0,30,False,In Stock
+PROD_SK_051,51,Manjimup Dried Apples,Produce,Dried fruit and bean curd,50 - 300 g pkgs.,53.0,20,0,10,False,In Stock
+PROD_SK_052,52,Filo Mix,Grains/Cereals,Breads crackers pasta and cereal,16 - 2 kg boxes,7.0,38,0,25,False,In Stock
+PROD_SK_053,53,Perth Pasties,Meat/Poultry,Prepared meats,48 pieces,32.8,0,0,0,True,Out of Stock
+PROD_SK_054,54,Tourtière,Meat/Poultry,Prepared meats,16 pies,7.45,21,0,10,False,In Stock
+PROD_SK_055,55,Pâté chinois,Meat/Poultry,Prepared meats,24 boxes x 2 pies,24.0,115,0,20,False,In Stock
+PROD_SK_056,56,Gnocchi di nonna Alice,Grains/Cereals,Breads crackers pasta and cereal,24 - 250 g pkgs.,38.0,21,10,30,False,Low Stock
+PROD_SK_057,57,Ravioli Angelo,Grains/Cereals,Breads crackers pasta and cereal,24 - 250 g pkgs.,19.5,36,0,20,False,In Stock
+PROD_SK_058,58,Escargots de Bourgogne,Seafood,Seaweed and fish,24 pieces,13.25,62,0,20,False,In Stock
+PROD_SK_059,59,Raclette Courdavault,Dairy Products,Cheeses,5 kg pkg.,55.0,79,0,0,False,In Stock
+PROD_SK_060,60,Camembert Pierrot,Dairy Products,Cheeses,15 - 300 g rounds,34.0,19,0,0,False,In Stock
+PROD_SK_061,61,Sirop d'érable,Condiments,Sweet and savory sauces relishes spreads and seasonings,24 - 500 ml bottles,28.5,113,0,25,False,In Stock
+PROD_SK_062,62,Tarte au sucre,Confections,Desserts candies and sweet breads,48 pies,49.3,17,0,0,False,In Stock
+PROD_SK_063,63,Vegie-spread,Condiments,Sweet and savory sauces relishes spreads and seasonings,15 - 625 g jars,43.9,24,0,5,False,In Stock
+PROD_SK_064,64,Wimmers gute Semmelknödel,Grains/Cereals,Breads crackers pasta and cereal,20 bags x 4 pieces,33.25,22,80,30,False,Low Stock
+PROD_SK_065,65,Louisiana Fiery Hot Pepper Sauce,Condiments,Sweet and savory sauces relishes spreads and seasonings,32 - 8 oz bottles,21.05,76,0,0,False,In Stock
+PROD_SK_066,66,Louisiana Hot Spiced Okra,Condiments,Sweet and savory sauces relishes spreads and seasonings,24 - 8 oz jars,17.0,4,100,20,False,Low Stock
+PROD_SK_067,67,Laughing Lumberjack Lager,Beverages,Soft drinks coffees teas beers and ales,24 - 12 oz bottles,14.0,52,0,10,False,In Stock
+PROD_SK_068,68,Scottish Longbreads,Confections,Desserts candies and sweet breads,10 boxes x 8 pieces,12.5,6,10,15,False,Low Stock
+PROD_SK_069,69,Gudbrandsdalsost,Dairy Products,Cheeses,10 kg pkg.,36.0,26,0,15,False,In Stock
+PROD_SK_070,70,Outback Lager,Beverages,Soft drinks coffees teas beers and ales,24 - 355 ml bottles,15.0,15,10,30,False,Low Stock
+PROD_SK_071,71,Flotemysost,Dairy Products,Cheeses,10 - 500 g pkgs.,21.5,26,0,0,False,In Stock
+PROD_SK_072,72,Mozzarella di Giovanni,Dairy Products,Cheeses,24 - 200 g pkgs.,34.8,14,0,0,False,In Stock
+PROD_SK_073,73,Röd Kaviar,Seafood,Seaweed and fish,24 - 150 g jars,15.0,101,0,5,False,In Stock
+PROD_SK_074,74,Longlife Tofu,Produce,Dried fruit and bean curd,5 kg pkg.,10.0,4,20,5,False,Low Stock
+PROD_SK_075,75,Rhönbräu Klosterbier,Beverages,Soft drinks coffees teas beers and ales,24 - 0.5 l bottles,7.75,125,0,25,False,In Stock
+PROD_SK_076,76,Lakkalikööri,Beverages,Soft drinks coffees teas beers and ales,500 ml,18.0,57,0,20,False,In Stock
+PROD_SK_077,77,Original Frankfurter grüne Soße,Condiments,Sweet and savory sauces relishes spreads and seasonings,12 boxes,13.0,32,0,15,False,In Stock

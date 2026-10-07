@@ -1,0 +1,90 @@
+customer_id,recency_days,frequency_orders_count,monetary_total_spend,r_score,f_score,m_score,rfm_combined_score,customer_segment,company_name,country
+ALFKI,28,6,4273.0,2,2,2,222,Promising / Needs Attention,Alfreds Futterkiste,Germany
+ANATR,64,4,1402.95,1,1,1,111,Lost Customers,Ana Trujillo Emparedados y helados,Mexico
+ANTON,99,7,7023.97,1,2,2,122,Promising / Needs Attention,Antonio Moreno Taquería,Mexico
+AROUT,27,13,13390.65,2,4,3,243,Promising / Needs Attention,Around the Horn,UK
+BERGS,64,18,24927.58,1,4,4,144,At Risk - High Spenders,Berglunds snabbköp,Sweden
+BLAUS,8,7,3239.8,4,2,1,421,Recent Customers,Blauer See Delikatessen,Germany
+BLONP,115,11,18534.08,1,3,4,134,At Risk - High Spenders,Blondesddsl père et fils,France
+BOLID,44,3,4232.85,2,1,2,212,Promising / Needs Attention,Bólido Comidas preparadas,Spain
+BONAP,1,17,21963.25,4,4,4,444,Champions,Bon app',France
+BOTTM,13,14,20801.61,3,4,4,344,Champions,Bottom-Dollar Markets,Canada
+BSBEV,23,10,6089.9,3,3,2,332,Loyal Customers,B's Beverages,UK
+CACTU,9,6,1814.8,4,2,1,421,Recent Customers,Cactus Comidas para llevar,Argentina
+CENTC,658,1,100.8,1,1,1,111,Lost Customers,Centro comercial Moctezuma,Mexico
+CHOPS,15,8,12348.88,3,2,3,323,Loyal Customers,Chop-suey Chinese,Switzerland
+COMMI,15,5,3810.75,3,1,2,312,Recent Customers,Comércio Mineiro,Brazil
+CONSH,104,3,1719.1,1,1,1,111,Lost Customers,Consolidated Holdings,UK
+DRACD,3,6,3763.21,4,2,2,422,Loyal Customers,Drachenblut Delikatessen,Germany
+DUMON,80,4,1615.9,1,1,1,111,Lost Customers,Du monde entier,France
+EASTC,9,8,14761.04,4,2,3,423,Loyal Customers,Eastern Connection,UK
+ERNSH,2,30,104874.99,4,4,4,444,Champions,Ernst Handel,Austria
+FAMIA,188,7,4107.55,1,2,2,122,Promising / Needs Attention,Familia Arquibaldo,Brazil
+FOLIG,136,5,11666.9,1,1,3,113,Promising / Needs Attention,Folies gourmandes,France
+FOLKO,10,19,29567.55,3,4,4,344,Champions,Folk och fä HB,Sweden
+FRANK,28,15,26656.55,2,4,4,244,Promising / Needs Attention,Frankenversand,Germany
+FRANR,44,3,3172.16,2,1,1,211,Promising / Needs Attention,France restauration,France
+FRANS,7,6,1545.7,4,2,1,421,Recent Customers,Franchi S.p.A.,Italy
+FURIB,49,8,6427.42,2,2,2,222,Promising / Needs Attention,Furia Bacalhau e Frutos do Mar,Portugal
+GALED,63,5,836.7,1,1,1,111,Lost Customers,Galería del gastrónomo,Spain
+GODOS,16,10,11446.36,3,3,3,333,Champions,Godos Cocina Típica,Spain
+GOURL,13,9,8414.14,3,3,3,333,Champions,Gourmet Lanchonetes,Brazil
+GREAL,7,11,18507.45,4,3,4,434,Champions,Great Lakes Food Market,USA
+GROSR,140,2,1488.7,1,1,1,111,Lost Customers,GROSELLA-Restaurante,Venezuela
+HANAR,10,14,32841.37,3,4,4,344,Champions,Hanari Carnes,Brazil
+HILAA,9,18,22768.76,4,4,4,444,Champions,HILARION-Abastos,Venezuela
+HUNGC,241,5,3063.2,1,1,1,111,Lost Customers,Hungry Coyote Import Store,USA
+HUNGO,7,19,49979.91,4,4,4,444,Champions,Hungry Owl All-Night Grocers,Ireland
+ISLAT,62,10,6146.3,1,3,2,132,Promising / Needs Attention,Island Trading,UK
+KOENE,21,14,30908.38,3,4,4,344,Champions,Königlich Essen,Germany
+LACOR,44,4,1992.05,2,1,1,211,Promising / Needs Attention,La corne d'abondance,France
+LAMAI,10,14,9328.2,3,4,3,343,Champions,La maison d'Asie,France
+LAUGB,126,3,522.5,1,1,1,111,Lost Customers,Laughing Bacchus Wine Cellars,Canada
+LAZYK,350,2,357.0,1,1,1,111,Lost Customers,Lazy K Kountry Store,USA
+LEHMS,2,15,19261.41,4,4,4,444,Champions,Lehmanns Marktstand,Germany
+LETSS,84,4,3076.47,1,1,1,111,Lost Customers,Let's Stop N Shop,USA
+LILAS,2,14,16076.6,4,4,3,443,Champions,LILA-Supermercado,Venezuela
+LINOD,16,12,16476.56,3,3,3,333,Champions,LINO-Delicateses,Venezuela
+LONEP,24,8,4258.6,3,2,2,322,Loyal Customers,Lonesome Pine Restaurant,USA
+MAGAA,52,10,7176.22,2,3,3,233,Promising / Needs Attention,Magazzini Alimentari Riuniti,Italy
+MAISD,30,7,9736.08,2,2,3,223,Promising / Needs Attention,Maison Dewey,Belgium
+MEREP,189,13,28872.19,1,4,4,144,At Risk - High Spenders,Mère Paillarde,Canada
+MORGK,56,5,5042.2,2,1,2,212,Promising / Needs Attention,Morgenstern Gesundkost,Germany
+NORTS,8,3,649.0,4,1,1,411,Recent Customers,North/South,UK
+OCEAN,38,5,3460.2,2,1,2,212,Promising / Needs Attention,Océano Atlántico Ltda.,Argentina
+OLDWO,17,10,15177.47,3,3,3,333,Champions,Old World Delicatessen,USA
+OTTIK,23,10,12496.19,3,3,3,333,Champions,Ottilies Käseladen,Germany
+PERIC,2,6,4242.2,4,2,2,422,Loyal Customers,Pericles Comidas clásicas,Mexico
+PICCO,10,10,23128.86,3,3,4,334,Champions,Piccolo und mehr,Austria
+PRINI,29,5,5044.94,2,1,2,212,Promising / Needs Attention,Princesa Isabel Vinhos,Portugal
+QUEDE,37,9,6664.81,2,3,2,232,Promising / Needs Attention,Que Delícia,Brazil
+QUEEN,3,13,25717.5,4,4,4,444,Champions,Queen Cozinha,Brazil
+QUICK,23,28,110277.32,3,4,4,344,Champions,QUICK-Stop,Germany
+RANCH,24,5,2844.1,3,2,1,321,Recent Customers,Rancho grande,Argentina
+RATTC,1,18,51097.79,4,4,4,444,Champions,Rattlesnake Canyon Grocery,USA
+REGGC,7,12,7048.24,4,3,2,432,Loyal Customers,Reggiani Caseifici,Italy
+RICAR,8,11,12450.8,4,3,3,433,Champions,Ricardo Adocicados,Brazil
+RICSU,1,10,19343.76,4,3,4,434,Champions,Richter Supermarkt,Switzerland
+ROMEY,28,5,1467.29,2,2,1,221,Promising / Needs Attention,Romero y tomillo,Spain
+SANTG,27,6,5735.15,2,2,2,222,Promising / Needs Attention,Santé Gourmet,Norway
+SAVEA,6,31,104361.96,4,4,4,444,Champions,Save-a-lot Markets,USA
+SEVES,92,9,16215.32,1,3,3,133,At Risk - High Spenders,Seven Seas Imports,UK
+SIMOB,1,7,16817.1,4,2,3,423,Loyal Customers,Simons bistro,Denmark
+SPECD,15,4,2423.35,3,1,1,311,Recent Customers,Spécialités du monde,France
+SPLIR,43,9,11441.63,2,3,3,233,Promising / Needs Attention,Split Rail Beer & Ale,USA
+SUPRD,16,12,24088.78,3,4,4,344,Champions,Suprêmes délices,Belgium
+THEBI,36,4,3361.0,2,1,2,212,Promising / Needs Attention,The Big Cheese,USA
+THECR,31,3,1947.24,2,1,1,211,Promising / Needs Attention,The Cracker Box,USA
+TOMSP,45,6,4778.14,2,2,2,222,Promising / Needs Attention,Toms Spezialitäten,Germany
+TORTU,3,10,10812.15,4,3,3,433,Champions,Tortuga Restaurante,Mexico
+TRADH,108,6,6850.66,1,2,2,122,Promising / Needs Attention,Tradição Hipermercados,Brazil
+TRAIH,119,3,1571.2,1,1,1,111,Lost Customers,Trail's Head Gourmet Provisioners,USA
+VAFFE,35,11,15843.92,2,3,3,233,Promising / Needs Attention,Vaffeljernet,Denmark
+VICTE,104,10,9182.43,1,3,3,133,At Risk - High Spenders,Victuailles en stock,France
+VINET,176,5,1480.0,1,2,1,121,Lost Customers,Vins et alcools Chevalier,France
+WANDK,14,10,9588.42,3,3,3,333,Champions,Die Wandernde Kuh,Germany
+WARTH,22,15,15648.7,3,4,3,343,Champions,Wartian Herkku,Finland
+WELLI,59,9,6068.2,2,3,2,232,Promising / Needs Attention,Wellington Importadora,Brazil
+WHITC,6,14,27363.61,4,4,4,444,Champions,White Clover Markets,USA
+WILMK,30,7,3161.35,2,2,1,221,Promising / Needs Attention,Wilman Kala,Finland
+WOLZA,14,7,3531.95,3,2,2,322,Loyal Customers,Wolski  Zajazd,Poland

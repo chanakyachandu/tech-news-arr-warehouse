@@ -1,30 +1,30 @@
-# 📰 Tech News & ARR Analytical Data Platform (Batch & Real-Time CDC Lakehouse)
+# 📰 Tech News & Multi-Domain Analytical Lakehouse Platform
 
 [![CI](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml/badge.svg)](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
-[![Arch](https://img.shields.io/badge/Architecture-Medallion%20%2B%20Streaming%20CDC-orange.svg)](DATA_ARCHITECTURE.md)
+[![Arch](https://img.shields.io/badge/Architecture-Medallion%20%7C%20SCD%202%20%7C%20Streaming%20CDC-orange.svg)](DATA_ARCHITECTURE.md)
 [![Schema](https://img.shields.io/badge/Warehouse-Star%20Schema-green.svg)](DATA_ARCHITECTURE.md)
-[![Tests](https://img.shields.io/badge/Tests-17%20Passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-22%20Passing-brightgreen.svg)](tests/)
 [![SQL](https://img.shields.io/badge/Engine-DuckDB-yellow.svg)](notebooks/04_sql_queries.ipynb)
 
-An end-to-end data platform implementing **Dual-Mode Batch Medallion Architecture**
-(`Bronze` ──► `Silver` ──► `Gold`) and **Real-Time Streaming CDC Engine** (Event-Time Watermarking,
-Dead-Letter Queue `DLQ`, and atomic `MERGE INTO` reconciliation) for tech news ingestion, company entity resolution,
-multi-currency ARR normalization, dimensional star-schema modeling, and an interactive
-**Natural Language to SQL Assistant** ("DataTalker AI") with AST safety guardrails.
+An enterprise-grade multi-domain data platform implementing **Dual-Mode Batch Medallion Architecture**
+(`Bronze` ──► `Silver` ──► `Gold`), **Slowly Changing Dimensions (SCD Type 2)**, and **Real-Time Streaming CDC Engine** (Event-Time Watermarking,
+Dead-Letter Queue `DLQ`, and atomic `MERGE INTO` reconciliation) across two core enterprise domains:
+1. **Domain A (Tech News & Financial ARR)**: Articles, company entity resolution, ARR observations, and Natural Language to SQL Assistant ("DataTalker AI").
+2. **Domain B (E-Commerce & Omnichannel Retail)**: Relational orders, fulfillment tracking, line-item margins, customer loyalty tier SCD Type 2 history, and Customer 360 RFM segmentation.
 
 ```mermaid
 flowchart TD
-    subgraph Sources["📥 Ingestion Sources"]
-        RAW_CSV["tech_news.csv (750 Articles)"]
-        RAW_JSON["company_metadata.json (21 Seed Companies)"]
-        STREAM_IN["Real-Time JSON Stream Landing (stream_landing/)"]
+    subgraph Sources["📥 Multi-Domain Ingestion Sources"]
+        RAW_CSV["Domain A: tech_news.csv (750 Articles)"]
+        RAW_ECOM["Domain B: E-Commerce (Orders, Products, Customers, Items, Categories)"]
+        STREAM_IN["Domain C: Real-Time Stream Landing (stream_landing/)"]
     end
 
-    subgraph BatchMedallion["⚙️ Batch Medallion Pipeline"]
+    subgraph BatchMedallion["⚙️ Medallion Architecture Pipeline"]
         B["🥉 BRONZE: Raw Ingestion & Schema Profiling"]
-        S["🥈 SILVER: FX Normalization (EUR/GBP/JPY to USD) + Entity Resolution (46 -> 21)"]
-        G["🥇 GOLD: Star-Schema Dimensional Relational Tables"]
+        S["🥈 SILVER: Normalization, Entity Resolution & Financial Margin Math"]
+        G["🥇 GOLD: Star-Schema Dimensional Relational Tables & SCD Type 2"]
         B --> S --> G
     end
 
@@ -40,21 +40,30 @@ flowchart TD
     Sources --> B
     STREAM_IN --> VAL
 
-    subgraph GoldWarehouse["🏛️ Star Schema Warehouse (DuckDB)"]
-        DIM_COMP["dim_company (26 Entities)"]
-        FCT_ART["fct_article (750 Articles)"]
-        FCT_ARR["fct_arr_observation (558 Observations)"]
-        AGG_QTR["agg_company_quarterly_arr (315 Rollups)"]
-        VIEW_ARR["view_company_latest_arr (Latest Snapshots)"]
-        DELIV["ai_articles_enriched.csv (124 Filtered Records)"]
+    subgraph GoldWarehouse["🏛️ Multi-Domain Star Schema Warehouse (DuckDB)"]
+        subgraph DomainA_Gold["📰 Domain A: Tech News & Financials"]
+            DIM_COMP["dim_company (26 Entities)"]
+            FCT_ART["fct_article (750 Articles)"]
+            FCT_ARR["fct_arr_observation (558 Observations)"]
+            AGG_QTR["agg_company_quarterly_arr (315 Rollups)"]
+            VIEW_ARR["view_company_latest_arr (Latest Snapshots)"]
+        end
+        subgraph DomainB_Gold["🛍️ Domain B: E-Commerce & Retail"]
+            DIM_CUST_SCD2["dim_customer_scd2 (SCD Type 2 History)"]
+            DIM_PROD["dim_product (77 SKUs & Categories)"]
+            DIM_DATE["dim_date (732 Calendar Days)"]
+            FCT_ORD["fct_orders (830 Orders)"]
+            FCT_ITEM["fct_order_items (2,155 Items)"]
+            AGG_RFM["agg_customer_rfm (Customer 360 RFM Segments)"]
+        end
     end
 
     G --> GoldWarehouse
-    MERGE --> GoldWarehouse
+    MERGE --> DomainA_Gold
 
     subgraph DownstreamApps["🤖 Downstream AI & Analytical Applications"]
         VEC["🧠 Semantic Search (Cosine Similarity + 384d Vectors)"]
-        TALKER["💬 DataTalker AI: Text-to-SQL + AST Guardrails + Executive Summary"]
+        TALKER["💬 DataTalker AI: Multi-Domain Text-to-SQL + AST Guardrails"]
     end
 
     GoldWarehouse --> VEC
@@ -69,10 +78,11 @@ flowchart TD
 tech-news-arr-warehouse/
 ├── medallion/                         # ⚙️ Core Medallion Architecture Python Package
 │   ├── __init__.py                    # Exposes pipeline APIs
-│   ├── bronze.py                      # Bronze layer: Ingestion & schema validation
-│   ├── silver.py                      # Silver layer: Cleaning, entity resolution & enrichment
-│   ├── gold.py                        # Gold layer: Star schema modeling, rollups & exports
-│   └── streaming_cdc.py               # ⚡ Real-Time Streaming, Watermarking, DLQ & CDC MERGE
+│   ├── bronze.py                      # Bronze layer: Tech news raw ingestion
+│   ├── silver.py                      # Silver layer: Tech news cleaning & normalization
+│   ├── gold.py                        # Gold layer: Tech news star schema modeling
+│   ├── streaming_cdc.py               # ⚡ Real-time Streaming, Watermarking & CDC MERGE
+│   └── ecommerce_medallion.py         # 🛍️ E-Commerce Medallion, SCD Type 2 & RFM Analytics
 │
 ├── notebooks/                         # 📓 Interactive Walkthrough & Demonstration Notebooks
 │   ├── 01_bronze.ipynb                # Ingestion & raw data profiling
@@ -80,7 +90,8 @@ tech-news-arr-warehouse/
 │   ├── 03_gold.ipynb                  # Relational star schema warehouse & aggregations
 │   ├── 04_sql_queries.ipynb           # SQL analytics (DuckDB & SQLite) over warehouse tables
 │   ├── 05_ai_text_to_sql.ipynb        # 🤖 Interactive AI Text-to-SQL Assistant Walkthrough
-│   └── 06_realtime_cdc_streaming.ipynb# ⚡ Real-Time Streaming & CDC Reconciliation Walkthrough
+│   ├── 06_realtime_cdc_streaming.ipynb# ⚡ Real-Time Streaming & CDC Reconciliation Walkthrough
+│   └── 07_ecommerce_lakehouse_scd2.ipynb # 🛍️ E-Commerce Lakehouse, SCD Type 2 & RFM Walkthrough
 │
 ├── ai_text_to_sql/                    # 🤖 Natural Language to SQL Assistant Package
 │   ├── __init__.py
@@ -89,39 +100,44 @@ tech-news-arr-warehouse/
 │   ├── sql_generator.py               # Gemini AI SQL generator & executive result explainer
 │   └── cli.py                         # Interactive terminal loop
 │
-├── tests/                             # 🧪 Automated Test Suite (pytest - 17 Tests)
+├── tests/                             # 🧪 Automated Test Suite (pytest - 22 Tests)
 │   ├── __init__.py
-│   ├── test_pipeline.py               # Batch Data quality, FX math & referential integrity (12 Tests)
-│   └── test_streaming_cdc.py          # Streaming, Watermark, DLQ & CDC reconciliation (5 Tests)
+│   ├── test_pipeline.py               # Tech news data quality & star schema integrity (12 Tests)
+│   ├── test_streaming_cdc.py          # Streaming, Watermark, DLQ & CDC reconciliation (5 Tests)
+│   └── test_ecommerce.py              # E-Commerce Bronze, Silver math, SCD 2 & RFM tests (5 Tests)
 │
 ├── advanced_semantic_search/          # 🤖 Advanced Vector Search & Embeddings Module
 │   ├── semantic_search.ipynb          # Cosine similarity, vector search & hybrid filtering
 │   ├── README.md                      # Semantic search documentation
 │   └── data/embeddings/               # Pre-computed dense vector matrix (.npy)
 │
-├── pipeline.py                        # 🚀 End-to-end batch CLI pipeline orchestrator
+├── pipeline.py                        # 🚀 Multi-domain master CLI orchestrator
 ├── text_to_sql.py                     # 💬 Interactive Text-to-SQL conversational agent launcher
 ├── DATA_ARCHITECTURE.md               # Dimensional star schema specifications & governance
-├── README.md                          # Documentation and portfolio guide
+├── README.md                          # Master documentation and portfolio guide
 ├── Task.txt                           # Project specification document
 ├── requirements.txt                   # Pinned Python dependencies
 ├── .gitignore                         # Git exclusion rules for clean commits
 │
 └── data/                              # 💾 Data Storage
-    ├── raw/                           # Source CSVs & canonical metadata
-    │   ├── tech_news.csv              # 750 raw tech articles
-    │   └── company_metadata.json      # 21 seed companies metadata
-    ├── processed/                     # Cleaned Silver dataset
-    │   └── tech_news_clean.csv        # Cleaned, standardized articles
+    ├── raw/                           # Raw datasets
+    │   ├── tech_news.csv              # Domain A: 750 raw tech articles
+    │   ├── company_metadata.json      # Domain A: 21 seed companies metadata
+    │   └── ecommerce/                 # 🛍️ Domain B: 5 relational E-Commerce CSVs
+    ├── processed/                     # Cleaned Silver datasets (Articles & E-Commerce)
     ├── stream_landing/                # ⚡ Real-time JSON micro-batch landing zone
     ├── dead_letter_queue/             # ⚡ Quarantined corrupt event records (DLQ)
-    └── warehouse/                     # Gold relational warehouse tables & deliverables
+    └── warehouse/                     # Gold relational warehouse tables
         ├── dim_company.csv            # Company dimension (N = 26)
         ├── fct_article.csv            # Article fact table (N = 750)
-        ├── fct_arr_observation.csv    # ARR point-in-time observations (N = 558)
-        ├── agg_company_quarterly_arr.csv # Quarterly rollups (N = 315)
-        ├── view_company_latest_arr.csv   # Latest ARR snapshot per company (N = 26)
-        └── ai_articles_enriched.csv   # Downstream AI deliverable (N = 124)
+        ├── fct_arr_observation.csv    # ARR observations (N = 558)
+        └── ecommerce/                 # 🛍️ E-Commerce Star Schema & SCD 2 Tables
+            ├── dim_customer_scd2.csv  # Customer SCD Type 2 history (N = 175)
+            ├── dim_product.csv        # Product dimension (N = 77)
+            ├── dim_date.csv           # Date hierarchy (N = 732)
+            ├── fct_orders.csv         # Order transactional facts (N = 830)
+            ├── fct_order_items.csv    # Line-item facts (N = 2,155)
+            └── agg_customer_rfm.csv   # Customer 360 RFM segmentation (N = 89)
 ```
 
 ---
