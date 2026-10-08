@@ -144,64 +144,16 @@ tech-news-arr-warehouse/
 
 ## 🌊 End-to-End Pipeline Flow & Data Lifecycle
 
-Here is how data flows through the multi-domain platform from raw source files and real-time streams to analytical and AI consumption:
+The platform processes data across three distinct domains using a multi-stage Medallion architecture:
 
-```
-[ 📥 RAW INGESTION SOURCES ]
-  • Domain A: data/raw/tech_news.csv (750 articles), company_metadata.json (21 seed companies)
-  • Domain B: data/raw/ecommerce/ (customers.csv, products.csv, categories.csv, orders.csv, order_details.csv)
-  • Domain C: data/stream_landing/ (Real-time JSONL event batches)
-        │
-        ▼
-[ 1. BRONZE LAYER: Raw Ingestion & Profiling ]
-  • Scripts:   medallion/bronze.py & medallion/ecommerce_medallion.py (Notebooks: 01_bronze, 07_ecommerce)
-  • Actions:   Zero-mutation ingestion, structural schema validation, metadata profiling
-        │
-        ▼
-[ 2. SILVER LAYER: Cleaning, Normalization & Feature Engineering ]
-  • Scripts:   medallion/silver.py & medallion/ecommerce_medallion.py (Notebooks: 02_silver, 07_ecommerce)
-  • Actions:   Domain A: FX normalization to USD (EUR, GBP, JPY, ranges), company alias resolution (46 -> 21), category taxonomy mapping (19 -> 7)
-               Domain B: ISO datetime conversion, fulfillment latency duration, gross/discount/net line calculations
-               Domain C: Payload validation, Dead-Letter Queue (DLQ) routing, event-time watermarking
-  • Outputs:   data/processed/tech_news_clean.csv & data/processed/ecommerce/ (silver_customers, silver_products, silver_orders, silver_order_items)
-        │
-        ▼
-[ 3. GOLD LAYER: Multi-Domain Star Schema & SCD Type 2 Models ]
-  • Scripts:   medallion/gold.py, medallion/ecommerce_medallion.py & medallion/streaming_cdc.py
-  • Tables:    Domain A: dim_company (N=26), fct_article (N=750), fct_arr_observation (N=558), agg_company_quarterly_arr (N=315), view_company_latest_arr (N=26)
-               Domain B: dim_customer_scd2 (N=175), dim_product (N=77), dim_date (N=732), fct_orders (N=830), fct_order_items (N=2,155), agg_customer_rfm (N=89)
-               Deliverable: ai_articles_enriched.csv (N=124)
-        │
-        ▼
-[ 4. REAL-TIME STREAMING & CDC RECONCILIATION ENGINE ]
-  • Script:    medallion/streaming_cdc.py (Notebook: 06_realtime_cdc_streaming.ipynb)
-  • Actions:   Event-time watermarking (48h cutoff), DLQ error isolation, atomic MERGE INTO reconciliation (I/U/D)
-        │
-        ▼
-[ 5. MULTI-DOMAIN PIPELINE ORCHESTRATION ]
-  • Script:    pipeline.py (CLI flag: --streaming)
-  • Actions:   Executes all domains end-to-end in-memory in ~0.56 seconds with full telemetry
-        │
-        ▼
-[ 6. AUTOMATED QUALITY TESTING (CI/CD) ]
-  • Suite:     pytest tests/ (22 Passing Tests)
-  • Actions:   Validates FX precision, star schema grains, SCD 2 active flags, watermarking, DLQ, and referential integrity
-        │
-        ▼
-[ 7. ANALYTICAL SQL EXPLORATION (DUCKDB & SQLITE) ]
-  • Notebooks: notebooks/04_sql_queries.ipynb & notebooks/07_ecommerce_lakehouse_scd2.ipynb
-  • Actions:   Window ranking, QoQ ARR growth, market basket analysis, customer RFM cohort segmentation
-        │
-        ▼
-[ 8. DOWNSTREAM AI & SEMANTIC SEARCH ]
-  • Module:    advanced_semantic_search/ (semantic_search.ipynb)
-  • Actions:   384-dimensional dense vector embeddings, cosine similarity search, hybrid metadata filtering
-        │
-        ▼
-[ 9. NATURAL LANGUAGE TO SQL ASSISTANT ("DATATALKER AI") ]
-  • Module:    ai_text_to_sql/ (Launcher: text_to_sql.py)
-  • Actions:   AST read-only guardrails, self-correcting Gemini SQL generation, dynamic schema injection, 2-sentence summaries
-```
+| Stage | Modules & Code | Input Sources | Primary Responsibilities |
+| :--- | :--- | :--- | :--- |
+| **1. Bronze** | [`medallion/bronze.py`](medallion/bronze.py)<br>[`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) | `data/raw/*.csv`<br>`data/raw/ecommerce/` | Raw ingestion, deduplication, schema boundary enforcement. |
+| **2. Silver** | [`medallion/silver.py`](medallion/silver.py)<br>[`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) | Bronze DataFrames | Currency normalization (USD), entity resolution, category mapping, datetime standardization. |
+| **3. Gold** | [`medallion/gold.py`](medallion/gold.py)<br>[`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) | Silver DataFrames | Dimensional Star Schema modeling, Surrogate Keys, SCD Type 2 history, Customer RFM aggregations. |
+| **4. Streaming & CDC** | [`medallion/streaming_cdc.py`](medallion/streaming_cdc.py) | `data/stream_landing/` | Event-time watermarking (48h cutoff), DLQ error quarantine, atomic `MERGE INTO` reconciliation. |
+| **5. Analytics & AI** | [`ai_text_to_sql/`](ai_text_to_sql)<br>[`advanced_semantic_search/`](advanced_semantic_search) | Gold Warehouse Tables | AST-guarded Text-to-SQL ("DataTalker AI"), 384-dimensional dense semantic search. |
+
 
 ### 1. Bronze Stage (Raw Multi-Domain Ingestion)
 * **Code**: [`medallion/bronze.py`](medallion/bronze.py) & [`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) |

@@ -9,6 +9,10 @@ __pycache__/
 htmlcov/
 .cache/
 
+# Internal Developer Notes & Agent Configs
+.dev_notes/
+.agent/
+
 # Virtual Environments
 .venv/
 venv/
