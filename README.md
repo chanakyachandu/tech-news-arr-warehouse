@@ -144,209 +144,129 @@ tech-news-arr-warehouse/
 
 ## 🌊 End-to-End Pipeline Flow & Data Lifecycle
 
-Here is how data flows through the platform from raw source files to analytical and AI consumption:
+Here is how data flows through the multi-domain platform from raw source files and real-time streams to analytical and AI consumption:
 
 ```
-[ RAW SOURCES ]
-  • data/raw/tech_news.csv (750 raw tech articles)
-  • data/raw/company_metadata.json (21 seed companies)
-       │
-       ▼
-[ 1. BRONZE LAYER: Raw Ingestion ]
-  • Script: medallion/bronze.py (Notebook: 01_bronze.ipynb)
-  • Actions: Zero mutations, schema validation, baseline profiling
-       │
-       ▼
-[ 2. SILVER LAYER: Cleaning & Normalization ]
-  • Script: medallion/silver.py (Notebook: 02_silver.ipynb)
-  • Actions: Multi-currency FX to USD (EUR, GBP, JPY, range midpoints)
-             Company alias resolution (46 -> 21 canonical entities)
-             Category taxonomy mapping (19 -> 7 clean categories)
-             Date standardization & feature engineering (age, size)
-  • Output:  data/processed/tech_news_clean.csv
-       │
-       ▼
-[ 3. GOLD LAYER: Dimensional Star Schema ]
-  • Script: medallion/gold.py (Notebook: 03_gold.ipynb)
-  • Tables:  dim_company (N = 26)
-             fct_article (N = 750)
-             fct_arr_observation (N = 558)
-             agg_company_quarterly_arr (N = 315)
-             view_company_latest_arr (N = 26)
-             ai_articles_enriched.csv (N = 124)
-       │
-       ▼
-[ 4. BATCH PIPELINE ORCHESTRATION ]
-  • Script:  pipeline.py
-  • Actions: Executes Bronze -> Silver -> Gold in-memory, logs timings
-  • Outputs: Materializes all 7 CSVs to data/processed/ & data/warehouse/
-       │
-       ▼
-[ 5. AUTOMATED QUALITY TESTING (CI/CD) ]
-  • Script:  pytest tests/test_pipeline.py
-  • Actions: 12 automated unit & integration tests validate FX math,
-             range midpoints, table grains, and referential integrity
-       │
-       ▼
-[ 6. ANALYTICAL SQL EXPLORATION ]
-  • Script:  notebooks/04_sql_queries.ipynb (DuckDB & SQLite engines)
-  • Actions: Window functions, QoQ ARR growth metrics, company rankings
-       │
-       ▼
-[ 7. DOWNSTREAM AI & SEMANTIC SEARCH ]
-  • Module:  advanced_semantic_search/ (semantic_search.ipynb)
-  • Actions: 384-dim dense embeddings, cosine similarity search,
-             hybrid SQL metadata + vector distance filtering
-       │
-       ▼
-[ 8. NATURAL LANGUAGE TO SQL ASSISTANT ("DATATALKER AI") ]
-  • Module:  ai_text_to_sql/ (Launcher: text_to_sql.py)
-  • Actions: AST safety guard, self-correcting Gemini SQL generation,
-             dynamic schema prompt injection, 2-sentence summaries
+[ 📥 RAW INGESTION SOURCES ]
+  • Domain A: data/raw/tech_news.csv (750 articles), company_metadata.json (21 seed companies)
+  • Domain B: data/raw/ecommerce/ (customers.csv, products.csv, categories.csv, orders.csv, order_details.csv)
+  • Domain C: data/stream_landing/ (Real-time JSONL event batches)
+        │
+        ▼
+[ 1. BRONZE LAYER: Raw Ingestion & Profiling ]
+  • Scripts:   medallion/bronze.py & medallion/ecommerce_medallion.py (Notebooks: 01_bronze, 07_ecommerce)
+  • Actions:   Zero-mutation ingestion, structural schema validation, metadata profiling
+        │
+        ▼
+[ 2. SILVER LAYER: Cleaning, Normalization & Feature Engineering ]
+  • Scripts:   medallion/silver.py & medallion/ecommerce_medallion.py (Notebooks: 02_silver, 07_ecommerce)
+  • Actions:   Domain A: FX normalization to USD (EUR, GBP, JPY, ranges), company alias resolution (46 -> 21), category taxonomy mapping (19 -> 7)
+               Domain B: ISO datetime conversion, fulfillment latency duration, gross/discount/net line calculations
+               Domain C: Payload validation, Dead-Letter Queue (DLQ) routing, event-time watermarking
+  • Outputs:   data/processed/tech_news_clean.csv & data/processed/ecommerce/ (silver_customers, silver_products, silver_orders, silver_order_items)
+        │
+        ▼
+[ 3. GOLD LAYER: Multi-Domain Star Schema & SCD Type 2 Models ]
+  • Scripts:   medallion/gold.py, medallion/ecommerce_medallion.py & medallion/streaming_cdc.py
+  • Tables:    Domain A: dim_company (N=26), fct_article (N=750), fct_arr_observation (N=558), agg_company_quarterly_arr (N=315), view_company_latest_arr (N=26)
+               Domain B: dim_customer_scd2 (N=175), dim_product (N=77), dim_date (N=732), fct_orders (N=830), fct_order_items (N=2,155), agg_customer_rfm (N=89)
+               Deliverable: ai_articles_enriched.csv (N=124)
+        │
+        ▼
+[ 4. REAL-TIME STREAMING & CDC RECONCILIATION ENGINE ]
+  • Script:    medallion/streaming_cdc.py (Notebook: 06_realtime_cdc_streaming.ipynb)
+  • Actions:   Event-time watermarking (48h cutoff), DLQ error isolation, atomic MERGE INTO reconciliation (I/U/D)
+        │
+        ▼
+[ 5. MULTI-DOMAIN PIPELINE ORCHESTRATION ]
+  • Script:    pipeline.py (CLI flag: --streaming)
+  • Actions:   Executes all domains end-to-end in-memory in ~0.56 seconds with full telemetry
+        │
+        ▼
+[ 6. AUTOMATED QUALITY TESTING (CI/CD) ]
+  • Suite:     pytest tests/ (22 Passing Tests)
+  • Actions:   Validates FX precision, star schema grains, SCD 2 active flags, watermarking, DLQ, and referential integrity
+        │
+        ▼
+[ 7. ANALYTICAL SQL EXPLORATION (DUCKDB & SQLITE) ]
+  • Notebooks: notebooks/04_sql_queries.ipynb & notebooks/07_ecommerce_lakehouse_scd2.ipynb
+  • Actions:   Window ranking, QoQ ARR growth, market basket analysis, customer RFM cohort segmentation
+        │
+        ▼
+[ 8. DOWNSTREAM AI & SEMANTIC SEARCH ]
+  • Module:    advanced_semantic_search/ (semantic_search.ipynb)
+  • Actions:   384-dimensional dense vector embeddings, cosine similarity search, hybrid metadata filtering
+        │
+        ▼
+[ 9. NATURAL LANGUAGE TO SQL ASSISTANT ("DATATALKER AI") ]
+  • Module:    ai_text_to_sql/ (Launcher: text_to_sql.py)
+  • Actions:   AST read-only guardrails, self-correcting Gemini SQL generation, dynamic schema injection, 2-sentence summaries
 ```
 
-### 1. Bronze Stage (Raw Ingestion)
-* **Code**: [`medallion/bronze.py`](medallion/bronze.py) |
-  **Notebook**: [`01_bronze.ipynb`](notebooks/01_bronze.ipynb)
-* **Inputs**: Raw CSVs in `data/raw/*.csv` (currently `tech_news.csv`, 750 rows) plus
-  `data/raw/company_metadata.json` (21 companies).
+### 1. Bronze Stage (Raw Multi-Domain Ingestion)
+* **Code**: [`medallion/bronze.py`](medallion/bronze.py) & [`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) |
+  **Notebooks**: [`01_bronze.ipynb`](notebooks/01_bronze.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
+* **Inputs**: Raw CSVs in `data/raw/*.csv` (`tech_news.csv`, `company_metadata.json`) and `data/raw/ecommerce/*.csv` (`customers`, `products`, `categories`, `orders`, `order_details`).
 * **Process**:
-  * **Multi-File Batch Ingestion**: Uses `glob('*.csv')` + `pd.concat` to merge raw CSVs,
-    auto-excluding warehouse exports.
-  * **Deduplication**: Runs `drop_duplicates(subset=['article_id'])` to guarantee zero
-    duplicate articles on re-runs.
-  * **JSON Flattener**: Converts `company_metadata.json` into a clean tabular DataFrame
-    (`orient='index'`).
-  * **DataFrame Outputs**: Returns `(df_articles_raw, df_companies_raw)` directly to Silver
-    with zero destructive mutations.
+  * **Multi-File Batch Ingestion**: Ingests raw structured CSVs and flattens nested JSON metadata without schema mutation.
+  * **Deduplication**: Enforces `drop_duplicates()` across natural primary keys to guarantee idempotent re-runs.
+  * **Zero-Loss Provenance**: Passes clean DataFrames to Silver preserving source lineage.
 
 ### 2. Silver Stage (Cleaning, Canonicalization & Feature Engineering)
-* **Code**: [`medallion/silver.py`](medallion/silver.py) |
-  **Notebook**: [`02_silver.ipynb`](notebooks/02_silver.ipynb)
-* **Inputs**: Raw DataFrames `(df_articles_raw, df_companies_raw)` from Bronze.
+* **Code**: [`medallion/silver.py`](medallion/silver.py) & [`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) |
+  **Notebooks**: [`02_silver.ipynb`](notebooks/02_silver.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
 * **Process**:
-  * **Entity & Category Canonicalization**: `COMPANY_NAME_MAPPING` maps 46 aliases to 21
-    entities (flagging unmapped with `has_company_metadata`); `CATEGORY_MAPPING` maps
-    19 raw tags to 7 clean taxonomy values.
-  * **Multi-Currency FX & Range Parser**: `extract_currency()` detects currency symbols
-    (£, €, ¥, $), `parse_revenue()` calculates midpoints on ranges, and `FX_RATES_TO_USD`
-    normalizes values into integer USD (`revenue_usd_M`).
-  * **Temporal Standardization**: `pd.to_datetime(format='mixed', dayfirst=False, utc=True)`
-    formats dates to `dd-mm-yyyy` and derives temporal features (`published_year`, `quarter`,
-    `month`, `year_month`).
-  * **Feature Engineering & Enrichment**: `pd.merge` joins company metadata; derives
-    `company_age` (`published_year - founded_year`) and `assign_size_category()` bins
-    employee counts (`Small`, `Medium`, `Large`).
-  * **Pipeline Orchestration**: `clean_articles_pipeline()` handles cleaning, deterministic
-    sorting, and export via `run_silver()` to `data/processed/tech_news_clean.csv`.
-* **Output**: `data/processed/tech_news_clean.csv` (Clean, fully enriched tabular dataset).
+  * **Domain A (Tech News)**: `COMPANY_NAME_MAPPING` resolves 46 aliases to 21 canonical entities; `CATEGORY_MAPPING` maps 19 raw tags to 7 clean taxonomies; `FX_RATES_TO_USD` converts EUR, GBP, JPY and revenue ranges to normalized USD integers (`revenue_usd_M`).
+  * **Domain B (E-Commerce)**: Standardizes ISO order/shipping timestamps; calculates fulfillment duration (`fulfillment_days`); computes line-item financial formulas (`line_gross_amount`, `discount_amount`, `line_net_amount`); denormalizes product category metadata and stock health statuses.
+* **Outputs**: `data/processed/tech_news_clean.csv` and `data/processed/ecommerce/` silver tables.
 
-### 3. Gold Stage (Dimensional Star Schema & Exports)
-* **Code**: [`medallion/gold.py`](medallion/gold.py) |
-  **Notebook**: [`03_gold.ipynb`](notebooks/03_gold.ipynb)
-* **Inputs**: Clean Silver dataset (`tech_news_clean.csv`).
+### 3. Gold Stage (Multi-Domain Star Schema & SCD Type 2)
+* **Code**: [`medallion/gold.py`](medallion/gold.py) & [`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) |
+  **Notebooks**: [`03_gold.ipynb`](notebooks/03_gold.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
 * **Process**:
-  * **Deterministic Surrogate Keys**: `generate_company_id_map()` builds alphanumeric
-    primary keys (`COMP001`, ...) over sorted canonical names; `build_fct_arr_observation()`
-    assigns `ARR0001` keys.
-  * **Star Schema Modeling**: `build_dim_company()` aggregates metadata per company (26 rows);
-    `build_fct_article()` maps foreign key `company_id` and retains 750 article records.
-  * **Financial Fact Isolation**: `build_fct_arr_observation()` filters `revenue_usd_M.notnull()`
-    to isolate point-in-time revenue observations (558 rows) with standard `arr_usd` values.
-  * **Aggregations & Analytical Views**: `build_agg_company_quarterly_arr()` computes quarterly
-    rollups (`count`, `avg`, `min`, `max`, `latest`); `build_view_company_latest_arr()`
-    extracts the latest known ARR per company.
-  * **Deliverable & Warehouse Export**: `build_ai_articles_enriched()` filters AI/ML records
-    (2022-2024, ARR > $50M) for downstream AI; `build_and_export_warehouse()` exports all 6
-    relational CSVs to `data/warehouse/`.
-* **Output**: Exported relational CSVs in `data/warehouse/` ready for SQL & BI querying.
+  * **Deterministic Surrogate Keys**: Assigns surrogate alphanumeric keys (`COMP001`, `CUST_SK_0001`, `PROD_SK_001`, `ITEM_SK_00001`).
+  * **Slowly Changing Dimension Type 2 (`dim_customer_scd2`)**: Tracks customer loyalty tier progressions (Bronze &rarr; Silver &rarr; Gold &rarr; Platinum) and credit limit adjustments with `effective_start_date`, `effective_end_date`, and `is_current_flag`.
+  * **Star Schema Facts**: Builds `fct_article`, `fct_arr_observation`, `fct_orders`, and `fct_order_items`.
+  * **Customer 360 RFM Analytics (`agg_customer_rfm`)**: Pre-computes Recency, Frequency, and Monetary scores, assigning customers to behavioral cohorts (*Champions*, *Loyal Customers*, *At Risk*, *Lost*).
+* **Outputs**: Exported relational CSVs in `data/warehouse/` and `data/warehouse/ecommerce/`.
 
-### 4. Pipeline Orchestration Layer (Batch Execution)
+### 4. Real-Time Streaming & CDC Layer
+* **Code**: [`medallion/streaming_cdc.py`](medallion/streaming_cdc.py) |
+  **Notebook**: [`06_realtime_cdc_streaming.ipynb`](notebooks/06_realtime_cdc_streaming.ipynb)
+* **Process**:
+  * **Event-Time Watermarking**: Evaluates incoming events against a 48-hour watermark window, discarding late arrivals.
+  * **Dead-Letter Queue (DLQ)**: Quarantines corrupted or malformed payloads into `data/dead_letter_queue/` with error metadata.
+  * **Atomic `MERGE INTO` CDC Reconciliation**: Reconciles live `INSERT`, `UPDATE`, and `DELETE` op-codes directly into Gold tables.
+
+### 5. Multi-Domain Pipeline Orchestration
 * **Code**: [`pipeline.py`](pipeline.py)
-* **Inputs**: Raw sources in `data/raw/` via Bronze ingestion.
 * **Process**:
-  * **Unified In-Memory Streaming**: Executes `get_raw_data()`, streaming DataFrames directly
-    into `clean_articles_pipeline()` with zero intermediate disk persistence.
-  * **Transformation to Model Handoff**: Streams enriched Silver DataFrame directly into
-    `build_and_export_warehouse()`, maintaining strict data lineage.
-  * **Latency & Execution Telemetry**: Benchmarks stage execution durations via `time.time()`
-    and logs progress (`[1/3] Bronze`, `[2/3] Silver`, `[3/3] Gold`).
-  * **Atomic Materialization**: Guarantees all 7 deliverable CSVs are materialized into
-    `data/processed/` and `data/warehouse/` atomically.
-* **Output**: Fully materialized warehouse ready for downstream SQL analytics and AI agents.
+  * Executes all domains end-to-end in-memory via `python pipeline.py --streaming` with stage latency telemetry in **~0.56 seconds**.
 
-### 5. Automated Quality Testing Layer
-* **Code**: [`tests/test_pipeline.py`](tests/test_pipeline.py) | **Suite**: `pytest`
-* **Inputs**: Output datasets from Bronze, Silver, and Gold stages.
+### 6. Automated Quality Testing Layer
+* **Code**: [`tests/`](tests/) | **Runner**: `pytest`
+* **Coverage**: **22 passing tests** asserting FX math, range midpoints, table grains, SCD 2 active flags, watermarking cutoff, and zero orphan foreign keys.
+
+### 7. Analytical SQL Exploration Layer
+* **Notebooks**: [`04_sql_queries.ipynb`](notebooks/04_sql_queries.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
 * **Process**:
-  * **Data Parsing & FX Math**: `test_currency_extraction()`, `test_revenue_parsing_formats()`,
-    `test_revenue_range_midpoint()`, and `test_fx_conversion_rates()` verify precision.
-  * **Categorization & Resolution**: `test_company_alias_resolution()`,
-    `test_category_taxonomy_mapping()`, and `test_company_size_categorization()` assert rules.
-  * **Warehouse Grains & Integrity**: `test_dim_company_grain()` (26 companies),
-    `test_fct_arr_observation_integrity()` (558 valid records), and `test_referential_integrity()`
-    assert foreign key relationships with zero orphan records.
-  * **Deliverable Compliance**: `test_ai_articles_enriched_criteria()` guarantees 100% adherence
-    to Task Section 3 filtering rules (AI/ML industry/category, 2022-2024, ARR > $50M).
-* **Output**: 12/12 passing unit and integration tests confirming pipeline integrity.
+  * Zero-copy in-memory DuckDB queries for window rankings, quarter-over-quarter ARR growth, product category margins, and market basket affinity.
 
-### 6. Analytical SQL Exploration Layer
-* **Notebook**: [`04_sql_queries.ipynb`](notebooks/04_sql_queries.ipynb)
-* **Inputs**: Modeled warehouse tables (`dim_company.csv`, `fct_article.csv`,
-  `fct_arr_observation.csv`).
-* **Process**:
-  * **Zero-Copy In-Memory Engines**: Mounts warehouse CSVs directly in DuckDB and SQLite without
-    duplicating physical storage.
-  * **Window Functions & Rankings**: Executes ANSI SQL using `ROW_NUMBER() OVER (PARTITION BY ...)`
-    to rank top-revenue companies and calculate market share across industries.
-  * **Quarterly Growth & Lag Metrics**: Calculates quarter-over-quarter ARR growth trends using
-    `LAG(arr_usd_M) OVER (PARTITION BY company_id ORDER BY observation_year, observation_quarter)`.
-  * **Cross-Dimensional Rollups**: Performs multi-table joins across `fct_arr_observation` and
-    `dim_company` to aggregate ARR observations by company size and public status.
-* **Output**: Verified analytical query results, financial trend tables, and ranking dataframes.
-
-### 7. Downstream AI & Semantic Search Layer
+### 8. Downstream AI & Semantic Search Layer
 * **Code**: [`advanced_semantic_search/`](advanced_semantic_search) |
   **Notebook**: [`semantic_search.ipynb`](advanced_semantic_search/semantic_search.ipynb)
-* **Inputs**: `data/warehouse/ai_articles_enriched.csv` (124 filtered AI/ML records, ARR > $50M).
 * **Process**:
-  * **Dense Vector Embeddings**: Encodes combined text (`title + summary`) into 384-dimensional
-    embeddings using pre-computed sentence transformer representations (`article_embeddings.npy`).
-  * **Cosine Similarity & Recommendation**: `top_similar_articles()` computes pairwise cosine
-    distances between articles to generate nearest-neighbor content recommendations.
-  * **Semantic Vector Retrieval**: `find_similar_articles()` performs nearest-neighbor vector
-    search over free-form user query strings.
-  * **SQL + Vector Hybrid Filter**: `hybrid_search()` merges relational metadata filters (company,
-    date, ARR threshold) with vector similarity distances to produce targeted search results.
-* **Output**: Ranked semantic search outputs, article recommendations, and high-dimensional vectors.
+  * 384-dimensional dense sentence embeddings (`article_embeddings.npy`) for cosine similarity search and hybrid SQL metadata filtering.
 
-### 8. Natural Language to SQL Assistant Layer ("DataTalker AI")
+### 9. Natural Language to SQL Assistant Layer ("DataTalker AI")
 * **Code**: [`ai_text_to_sql/`](ai_text_to_sql) |
   **Launcher**: [`text_to_sql.py`](text_to_sql.py) |
   **Notebook**: [`05_ai_text_to_sql.ipynb`](notebooks/05_ai_text_to_sql.ipynb)
-* **Inputs**: 5 warehouse tables in `data/warehouse/` (`dim_company`, `fct_article`,
-  `fct_arr_observation`, `agg_company_quarterly_arr`, `view_company_latest_arr`).
-* **Architecture & Component Mechanics**:
-  * **1. Schema Provider ([`schema_provider.py`](ai_text_to_sql/schema_provider.py))**:
-    `init_duckdb_warehouse()` loads warehouse CSVs into in-memory DuckDB tables.
-    `get_warehouse_schema_context()` inspects columns, data types, foreign keys, and real sample
-    rows to construct an LLM-grounded schema prompt with business query rules.
-  * **2. Production SQL Safety Guard ([`sql_guard.py`](ai_text_to_sql/sql_guard.py))**:
-    `clean_sql_query()` strips markdown blocks and semicolons. `validate_sql_safety()` blocks 16
-    destructive keywords (`DROP`, `DELETE`, `UPDATE`, `INSERT`, `ALTER`, `TRUNCATE`, `EXEC`),
-    enforces `SELECT`/`WITH` only, and `enforce_row_limit()` auto-injects `LIMIT 50`.
-  * **3. AI SQL Generator ([`sql_generator.py`](ai_text_to_sql/sql_generator.py))**:
-    `get_gemini_client()` connects to Gemini API (`gemini-3.5-flash-lite` via OpenAI SDK).
-    `generate_sql()` translates natural language questions into ANSI DuckDB SQL.
-    `execute_and_retry_sql()` runs the query; on syntax or schema errors, it automatically feeds
-    the error back to Gemini for self-correction (up to 2 retries).
-  * **4. Executive Result Explainer ([`sql_generator.py`](ai_text_to_sql/sql_generator.py))**:
-    `explain_query_results()` feeds tabular query results back to Gemini to synthesize a concise,
-    2-sentence executive summary directly answering the business question in plain English.
-  * **5. Interactive REPL Terminal ([`cli.py`](ai_text_to_sql/cli.py))**:
-    `run_cli()` provides an interactive terminal loop (`python text_to_sql.py`) where users chat
-    with the warehouse in real time with formatted tabular results and execution metrics.
-* **Output**: Validated ANSI DuckDB SQL, tabular query outputs, and 2-sentence executive answers.
+* **Components**:
+  * **Schema Provider**: Dynamically inspects tables, types, foreign keys, and sample rows.
+  * **AST Safety Guard**: Blocks 16 destructive keywords and injects row limits.
+  * **AI SQL Generator & Self-Correction**: Translates English questions into DuckDB SQL with auto-retries on error.
+  * **Executive Explainer**: Synthesizes tabular results into 2-sentence plain English executive briefs.
 
 ---
 
