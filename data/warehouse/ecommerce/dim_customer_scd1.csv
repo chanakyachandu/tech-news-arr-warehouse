@@ -1,0 +1,92 @@
+customer_id,company_name,contact_name,city,country,loyalty_tier,credit_limit_usd,last_updated_at
+ALFKI,Alfreds Futterkiste,Maria Anders,Berlin,Germany,Bronze,5000,1996-01-01
+ANATR,Ana Trujillo Emparedados y helados,Ana Trujillo,México D.F.,Mexico,Bronze,5000,1996-01-01
+ANTON,Antonio Moreno Taquería,Antonio Moreno,México D.F.,Mexico,Gold,20000,1998-01-01
+AROUT,Around the Horn,Thomas Hardy,London,UK,Gold,20000,1998-01-01
+BERGS,Berglunds snabbköp,Christina Berglund,Luleå,Sweden,Platinum,50000,1998-04-01
+BLAUS,Blauer See Delikatessen,Hanna Moos,Mannheim,Germany,Bronze,5000,1996-01-01
+BLONP,Blondesddsl père et fils,Frédérique Citeaux,Strasbourg,France,Platinum,50000,1998-04-01
+BOLID,Bólido Comidas preparadas,Martín Sommer,Madrid,Spain,Bronze,5000,1996-01-01
+BONAP,Bon app',Laurence Lebihan,Marseille,France,Platinum,50000,1998-04-01
+BOTTM,Bottom-Dollar Markets,Elizabeth Lincoln,Tsawassen,Canada,Platinum,50000,1998-04-01
+BSBEV,B's Beverages,Victoria Ashworth,London,UK,Gold,20000,1998-01-01
+CACTU,Cactus Comidas para llevar,Patricio Simpson,Buenos Aires,Argentina,Bronze,5000,1996-01-01
+CENTC,Centro comercial Moctezuma,Francisco Chang,México D.F.,Mexico,Bronze,5000,1996-01-01
+CHOPS,Chop-suey Chinese,Yang Wang,Bern,Switzerland,Gold,20000,1998-01-01
+COMMI,Comércio Mineiro,Pedro Afonso,Sao Paulo,Brazil,Bronze,5000,1996-01-01
+CONSH,Consolidated Holdings,Elizabeth Brown,London,UK,Bronze,5000,1996-01-01
+DRACD,Drachenblut Delikatessen,Sven Ottlieb,Aachen,Germany,Bronze,5000,1996-01-01
+DUMON,Du monde entier,Janine Labrune,Nantes,France,Bronze,5000,1996-01-01
+EASTC,Eastern Connection,Ann Devon,London,UK,Gold,20000,1998-01-01
+ERNSH,Ernst Handel,Roland Mendel,Graz,Austria,Platinum,50000,1998-04-01
+FAMIA,Familia Arquibaldo,Aria Cruz,Sao Paulo,Brazil,Bronze,5000,1996-01-01
+FISSA,FISSA Fabrica Inter. Salchichas S.A.,Diego Roel,Madrid,Spain,Bronze,5000,1996-01-01
+FOLIG,Folies gourmandes,Martine Rancé,Lille,France,Gold,20000,1998-01-01
+FOLKO,Folk och fä HB,Maria Larsson,Bräcke,Sweden,Platinum,50000,1998-04-01
+FRANK,Frankenversand,Peter Franken,München,Germany,Platinum,50000,1998-04-01
+FRANR,France restauration,Carine Schmitt,Nantes,France,Bronze,5000,1996-01-01
+FRANS,Franchi S.p.A.,Paolo Accorti,Torino,Italy,Bronze,5000,1996-01-01
+FURIB,Furia Bacalhau e Frutos do Mar,Lino Rodriguez,Lisboa,Portugal,Gold,20000,1998-01-01
+GALED,Galería del gastrónomo,Eduardo Saavedra,Barcelona,Spain,Bronze,5000,1996-01-01
+GODOS,Godos Cocina Típica,José Pedro Freyre,Sevilla,Spain,Gold,20000,1998-01-01
+GOURL,Gourmet Lanchonetes,André Fonseca,Campinas,Brazil,Gold,20000,1998-01-01
+GREAL,Great Lakes Food Market,Howard Snyder,Eugene,USA,Platinum,50000,1998-04-01
+GROSR,GROSELLA-Restaurante,Manuel Pereira,Caracas,Venezuela,Bronze,5000,1996-01-01
+HANAR,Hanari Carnes,Mario Pontes,Rio de Janeiro,Brazil,Platinum,50000,1998-04-01
+HILAA,HILARION-Abastos,Carlos Hernández,San Cristóbal,Venezuela,Platinum,50000,1998-04-01
+HUNGC,Hungry Coyote Import Store,Yoshi Latimer,Elgin,USA,Bronze,5000,1996-01-01
+HUNGO,Hungry Owl All-Night Grocers,Patricia McKenna,Cork,Ireland,Platinum,50000,1998-04-01
+ISLAT,Island Trading,Helen Bennett,Cowes,UK,Gold,20000,1998-01-01
+KOENE,Königlich Essen,Philip Cramer,Brandenburg,Germany,Platinum,50000,1998-04-01
+LACOR,La corne d'abondance,Daniel Tonini,Versailles,France,Bronze,5000,1996-01-01
+LAMAI,La maison d'Asie,Annette Roulet,Toulouse,France,Gold,20000,1998-01-01
+LAUGB,Laughing Bacchus Wine Cellars,Yoshi Tannamuri,Vancouver,Canada,Bronze,5000,1996-01-01
+LAZYK,Lazy K Kountry Store,John Steel,Walla Walla,USA,Bronze,5000,1996-01-01
+LEHMS,Lehmanns Marktstand,Renate Messner,Frankfurt a.M.,Germany,Platinum,50000,1998-04-01
+LETSS,Let's Stop N Shop,Jaime Yorres,San Francisco,USA,Bronze,5000,1996-01-01
+LILAS,LILA-Supermercado,Carlos González,Barquisimeto,Venezuela,Platinum,50000,1998-04-01
+LINOD,LINO-Delicateses,Felipe Izquierdo,I. de Margarita,Venezuela,Platinum,50000,1998-04-01
+LONEP,Lonesome Pine Restaurant,Fran Wilson,Portland,USA,Bronze,5000,1996-01-01
+MAGAA,Magazzini Alimentari Riuniti,Giovanni Rovelli,Bergamo,Italy,Gold,20000,1998-01-01
+MAISD,Maison Dewey,Catherine Dewey,Bruxelles,Belgium,Gold,20000,1998-01-01
+MEREP,Mère Paillarde,Jean Fresnière,Montréal,Canada,Platinum,50000,1998-04-01
+MORGK,Morgenstern Gesundkost,Alexander Feuer,Leipzig,Germany,Gold,20000,1998-01-01
+NORTS,North/South,Simon Crowther,London,UK,Bronze,5000,1996-01-01
+OCEAN,Océano Atlántico Ltda.,Yvonne Moncada,Buenos Aires,Argentina,Bronze,5000,1996-01-01
+OLDWO,Old World Delicatessen,Rene Phillips,Anchorage,USA,Platinum,50000,1998-04-01
+OTTIK,Ottilies Käseladen,Henriette Pfalzheim,Köln,Germany,Gold,20000,1998-01-01
+PARIS,Paris spécialités,Marie Bertrand,Paris,France,Bronze,5000,1996-01-01
+PERIC,Pericles Comidas clásicas,Guillermo Fernández,México D.F.,Mexico,Bronze,5000,1996-01-01
+PICCO,Piccolo und mehr,Georg Pipps,Salzburg,Austria,Platinum,50000,1998-04-01
+PRINI,Princesa Isabel Vinhos,Isabel de Castro,Lisboa,Portugal,Gold,20000,1998-01-01
+QUEDE,Que Delícia,Bernardo Batista,12Rio de Janeiro,Brazil,Gold,20000,1998-01-01
+QUEEN,Queen Cozinha,Lúcia Carvalho,Sao Paulo,Brazil,Platinum,50000,1998-04-01
+QUICK,QUICK-Stop,Horst Kloss,Cunewalde,Germany,Platinum,50000,1998-04-01
+RANCH,Rancho grande,Sergio Gutiérrez,Buenos Aires,Argentina,Bronze,5000,1996-01-01
+RATTC,Rattlesnake Canyon Grocery,Paula Wilson,Albuquerque,USA,Platinum,50000,1998-04-01
+REGGC,Reggiani Caseifici,Maurizio Moroni,Reggio Emilia,Italy,Gold,20000,1998-01-01
+RICAR,Ricardo Adocicados,Janete Limeira,Rio de Janeiro,Brazil,Gold,20000,1998-01-01
+RICSU,Richter Supermarkt,Michael Holz,Genève,Switzerland,Platinum,50000,1998-04-01
+ROMEY,Romero y tomillo,Alejandra Camino,Madrid,Spain,Bronze,5000,1996-01-01
+SANTG,Santé Gourmet,Jonas Bergulfsen,Stavern,Norway,Gold,20000,1998-01-01
+SAVEA,Save-a-lot Markets,Jose Pavarotti,Boise,USA,Platinum,50000,1998-04-01
+SEVES,Seven Seas Imports,Hari Kumar,London,UK,Platinum,50000,1998-04-01
+SIMOB,Simons bistro,Jytte Petersen,Kobenhavn,Denmark,Platinum,50000,1998-04-01
+SPECD,Spécialités du monde,Dominique Perrier,Paris,France,Bronze,5000,1996-01-01
+SPLIR,Split Rail Beer & Ale,Art Braunschweiger,Lander,USA,Gold,20000,1998-01-01
+SUPRD,Suprêmes délices,Pascale Cartrain,Charleroi,Belgium,Platinum,50000,1998-04-01
+THEBI,The Big Cheese,Liz Nixon,Portland,USA,Bronze,5000,1996-01-01
+THECR,The Cracker Box,Liu Wong,Butte,USA,Bronze,5000,1996-01-01
+TOMSP,Toms Spezialitäten,Karin Josephs,Münster,Germany,Bronze,5000,1996-01-01
+TORTU,Tortuga Restaurante,Miguel Angel Paolino,México D.F.,Mexico,Gold,20000,1998-01-01
+TRADH,Tradição Hipermercados,Anabela Domingues,Sao Paulo,Brazil,Gold,20000,1998-01-01
+TRAIH,Trail's Head Gourmet Provisioners,Helvetius Nagy,Kirkland,USA,Bronze,5000,1996-01-01
+VAFFE,Vaffeljernet,Palle Ibsen,Århus,Denmark,Platinum,50000,1998-04-01
+VICTE,Victuailles en stock,Mary Saveley,Lyon,France,Gold,20000,1998-01-01
+VINET,Vins et alcools Chevalier,Paul Henriot,Reims,France,Bronze,5000,1996-01-01
+WANDK,Die Wandernde Kuh,Rita Müller,Stuttgart,Germany,Gold,20000,1998-01-01
+WARTH,Wartian Herkku,Pirkko Koskitalo,Oulu,Finland,Platinum,50000,1998-04-01
+WELLI,Wellington Importadora,Paula Parente,Resende,Brazil,Gold,20000,1998-01-01
+WHITC,White Clover Markets,Karl Jablonski,Seattle,USA,Platinum,50000,1998-04-01
+WILMK,Wilman Kala,Matti Karttunen,Helsinki,Finland,Bronze,5000,1996-01-01
+WOLZA,Wolski  Zajazd,Zbyszek Piestrzeniewicz,Warszawa,Poland,Bronze,5000,1996-01-01

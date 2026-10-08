@@ -1,0 +1,213 @@
+{
+  "evaluation_timestamp": "2026-10-08T22:54:19.291569",
+  "duration_seconds": 0.0052,
+  "overall_status": "PASSED",
+  "overall_health_score_pct": 100.0,
+  "summary": {
+    "total_constraints_evaluated": 25,
+    "passed_count": 25,
+    "failed_count": 0
+  },
+  "constraint_evaluations": [
+    {
+      "table_name": "dim_company",
+      "constraint_type": "PRIMARY_KEY",
+      "target": "company_id",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 26 keys are unique"
+    },
+    {
+      "table_name": "dim_company",
+      "constraint_type": "NOT_NULL",
+      "target": "company_name",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "0 nulls across 26 rows"
+    },
+    {
+      "table_name": "fct_article",
+      "constraint_type": "NOT_NULL",
+      "target": "article_id",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "0 nulls across 750 rows"
+    },
+    {
+      "table_name": "fct_article",
+      "constraint_type": "NOT_NULL",
+      "target": "published_date_clean",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "0 nulls across 750 rows"
+    },
+    {
+      "table_name": "fct_article",
+      "constraint_type": "ENUM_TAXONOMY",
+      "target": "category_clean",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 750 values match allowed categories"
+    },
+    {
+      "table_name": "fct_arr_observation",
+      "constraint_type": "FOREIGN_KEY",
+      "target": "company_id -> dim_company.company_id",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 558 foreign keys resolve to parent table"
+    },
+    {
+      "table_name": "fct_arr_observation",
+      "constraint_type": "CHECK_RANGE",
+      "target": "arr_usd_M > 0",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 558 values within bounds [0.0, None]"
+    },
+    {
+      "table_name": "fct_arr_observation",
+      "constraint_type": "CHECK_RANGE",
+      "target": "observation_year BETWEEN 2000 AND 2030",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 558 values within bounds [2000, 2030]"
+    },
+    {
+      "table_name": "dim_customer_scd1",
+      "constraint_type": "PRIMARY_KEY",
+      "target": "customer_id",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 91 keys are unique"
+    },
+    {
+      "table_name": "dim_customer_scd2",
+      "constraint_type": "PRIMARY_KEY",
+      "target": "customer_sk",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 175 keys are unique"
+    },
+    {
+      "table_name": "dim_customer_scd2",
+      "constraint_type": "NOT_NULL",
+      "target": "effective_start_date",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "0 nulls across 175 rows"
+    },
+    {
+      "table_name": "dim_customer_scd2",
+      "constraint_type": "NOT_NULL",
+      "target": "effective_end_date",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "0 nulls across 175 rows"
+    },
+    {
+      "table_name": "dim_customer_scd3",
+      "constraint_type": "PRIMARY_KEY",
+      "target": "customer_id",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 91 keys are unique"
+    },
+    {
+      "table_name": "dim_product",
+      "constraint_type": "PRIMARY_KEY",
+      "target": "product_sk",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 77 keys are unique"
+    },
+    {
+      "table_name": "dim_product",
+      "constraint_type": "CHECK_RANGE",
+      "target": "unit_price >= 0",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 77 values within bounds [0.0, None]"
+    },
+    {
+      "table_name": "dim_product",
+      "constraint_type": "ENUM_TAXONOMY",
+      "target": "stock_status",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 77 values match allowed categories"
+    },
+    {
+      "table_name": "fct_orders",
+      "constraint_type": "FOREIGN_KEY",
+      "target": "customer_sk -> dim_customer_scd2.customer_sk",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 830 foreign keys resolve to parent table"
+    },
+    {
+      "table_name": "fct_orders",
+      "constraint_type": "CHECK_RANGE",
+      "target": "total_net_amount >= 0",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 830 values within bounds [0.0, None]"
+    },
+    {
+      "table_name": "fct_order_items",
+      "constraint_type": "FOREIGN_KEY",
+      "target": "order_id -> fct_orders.order_id",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 2155 foreign keys resolve to parent table"
+    },
+    {
+      "table_name": "fct_order_items",
+      "constraint_type": "FOREIGN_KEY",
+      "target": "product_sk -> dim_product.product_sk",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 2155 foreign keys resolve to parent table"
+    },
+    {
+      "table_name": "fct_order_items",
+      "constraint_type": "CHECK_RANGE",
+      "target": "discount_rate BETWEEN 0.0 AND 1.0",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 2155 values within bounds [0.0, 1.0]"
+    },
+    {
+      "table_name": "fct_order_items",
+      "constraint_type": "CHECK_RANGE",
+      "target": "line_net_amount >= 0",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 2155 values within bounds [0.0, None]"
+    },
+    {
+      "table_name": "agg_customer_rfm",
+      "constraint_type": "CHECK_RANGE",
+      "target": "r_score BETWEEN 1 AND 4",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 89 values within bounds [1, 4]"
+    },
+    {
+      "table_name": "agg_customer_rfm",
+      "constraint_type": "CHECK_RANGE",
+      "target": "f_score BETWEEN 1 AND 4",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 89 values within bounds [1, 4]"
+    },
+    {
+      "table_name": "agg_customer_rfm",
+      "constraint_type": "CHECK_RANGE",
+      "target": "m_score BETWEEN 1 AND 4",
+      "status": "PASS",
+      "pass_rate_pct": 100.0,
+      "details": "All 89 values within bounds [1, 4]"
+    }
+  ]
+}
