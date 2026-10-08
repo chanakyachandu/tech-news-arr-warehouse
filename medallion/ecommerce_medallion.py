@@ -173,12 +173,14 @@ class EcommerceMedallionPipeline:
         df_det = silver_data["silver_order_items"].copy()
 
         # ---------------------------------------------------------------------
-        # A. Build SCD Type 2 Customer Dimension (dim_customer_scd2)
+        # A. Build SCD Types (Type 1, Type 2, and Type 3) Customer Dimensions
         # ---------------------------------------------------------------------
         # Calculate customer lifetime spend to simulate loyalty tier changes
         cust_spend = df_ord.groupby("customerID")["total_net_amount"].sum().to_dict()
 
+        scd1_rows = []
         scd2_rows = []
+        scd3_rows = []
         sk_counter = 1
 
         for _, row in df_cust.iterrows():
@@ -190,9 +192,35 @@ class EcommerceMedallionPipeline:
             spend = cust_spend.get(cid, 0.0)
 
             # Determine loyalty progression
-            # High spenders (> $5,000) have historical 'Silver' then upgraded to 'Gold'/'Platinum'
             if spend >= 15000:
-                # History Version 1: Silver Tier (1996 - 1997)
+                # --- SCD Type 1: Only Latest Current State ---
+                scd1_rows.append({
+                    "customer_id": cid,
+                    "company_name": cname,
+                    "contact_name": contact,
+                    "city": city,
+                    "country": country,
+                    "loyalty_tier": "Platinum",
+                    "credit_limit_usd": 50000,
+                    "last_updated_at": "1998-04-01"
+                })
+
+                # --- SCD Type 3: Current vs Previous State Columns ---
+                scd3_rows.append({
+                    "customer_id": cid,
+                    "company_name": cname,
+                    "contact_name": contact,
+                    "city": city,
+                    "country": country,
+                    "current_loyalty_tier": "Platinum",
+                    "previous_loyalty_tier": "Gold",
+                    "current_credit_limit_usd": 50000,
+                    "previous_credit_limit_usd": 25000,
+                    "tier_change_date": "1998-04-01"
+                })
+
+                # --- SCD Type 2: Full Historical Version Rows with Date Ranges ---
+                # Version 1: Silver Tier (1996 - 1997)
                 scd2_rows.append({
                     "customer_sk": f"CUST_SK_{sk_counter:04d}",
                     "customer_id": cid,
@@ -208,7 +236,7 @@ class EcommerceMedallionPipeline:
                 })
                 sk_counter += 1
 
-                # History Version 2: Gold Tier (1997 - 1998)
+                # Version 2: Gold Tier (1997 - 1998)
                 scd2_rows.append({
                     "customer_sk": f"CUST_SK_{sk_counter:04d}",
                     "customer_id": cid,
@@ -224,7 +252,7 @@ class EcommerceMedallionPipeline:
                 })
                 sk_counter += 1
 
-                # Current Version 3: Platinum Tier (Active)
+                # Version 3: Platinum Tier (Active)
                 scd2_rows.append({
                     "customer_sk": f"CUST_SK_{sk_counter:04d}",
                     "customer_id": cid,
@@ -241,7 +269,34 @@ class EcommerceMedallionPipeline:
                 sk_counter += 1
 
             elif spend >= 5000:
-                # History Version 1: Standard Bronze (1996 - 1997)
+                # --- SCD Type 1 ---
+                scd1_rows.append({
+                    "customer_id": cid,
+                    "company_name": cname,
+                    "contact_name": contact,
+                    "city": city,
+                    "country": country,
+                    "loyalty_tier": "Gold",
+                    "credit_limit_usd": 20000,
+                    "last_updated_at": "1998-01-01"
+                })
+
+                # --- SCD Type 3 ---
+                scd3_rows.append({
+                    "customer_id": cid,
+                    "company_name": cname,
+                    "contact_name": contact,
+                    "city": city,
+                    "country": country,
+                    "current_loyalty_tier": "Gold",
+                    "previous_loyalty_tier": "Bronze",
+                    "current_credit_limit_usd": 20000,
+                    "previous_credit_limit_usd": 5000,
+                    "tier_change_date": "1998-01-01"
+                })
+
+                # --- SCD Type 2 ---
+                # Version 1: Bronze (1996 - 1997)
                 scd2_rows.append({
                     "customer_sk": f"CUST_SK_{sk_counter:04d}",
                     "customer_id": cid,
@@ -257,7 +312,7 @@ class EcommerceMedallionPipeline:
                 })
                 sk_counter += 1
 
-                # Current Version 2: Gold (Active)
+                # Version 2: Gold (Active)
                 scd2_rows.append({
                     "customer_sk": f"CUST_SK_{sk_counter:04d}",
                     "customer_id": cid,
@@ -274,7 +329,33 @@ class EcommerceMedallionPipeline:
                 sk_counter += 1
 
             else:
-                # Single Active Version: Bronze
+                # --- SCD Type 1 ---
+                scd1_rows.append({
+                    "customer_id": cid,
+                    "company_name": cname,
+                    "contact_name": contact,
+                    "city": city,
+                    "country": country,
+                    "loyalty_tier": "Bronze",
+                    "credit_limit_usd": 5000,
+                    "last_updated_at": "1996-01-01"
+                })
+
+                # --- SCD Type 3 ---
+                scd3_rows.append({
+                    "customer_id": cid,
+                    "company_name": cname,
+                    "contact_name": contact,
+                    "city": city,
+                    "country": country,
+                    "current_loyalty_tier": "Bronze",
+                    "previous_loyalty_tier": None,
+                    "current_credit_limit_usd": 5000,
+                    "previous_credit_limit_usd": None,
+                    "tier_change_date": None
+                })
+
+                # --- SCD Type 2 ---
                 scd2_rows.append({
                     "customer_sk": f"CUST_SK_{sk_counter:04d}",
                     "customer_id": cid,
@@ -290,7 +371,9 @@ class EcommerceMedallionPipeline:
                 })
                 sk_counter += 1
 
+        df_dim_customer_scd1 = pd.DataFrame(scd1_rows)
         df_dim_customer_scd2 = pd.DataFrame(scd2_rows)
+        df_dim_customer_scd3 = pd.DataFrame(scd3_rows)
 
         # ---------------------------------------------------------------------
         # B. Build Product Dimension (dim_product)
@@ -420,7 +503,9 @@ class EcommerceMedallionPipeline:
         rfm_table.rename(columns={"customerID": "customer_id"}, inplace=True)
 
         gold_tables = {
+            "dim_customer_scd1": df_dim_customer_scd1,
             "dim_customer_scd2": df_dim_customer_scd2,
+            "dim_customer_scd3": df_dim_customer_scd3,
             "dim_product": df_dim_product,
             "dim_date": df_dim_date,
             "fct_orders": df_fct_orders,

@@ -116,3 +116,30 @@ def test_ecommerce_rfm_customer_segments(ecom_pipeline):
         "At Risk - High Spenders", "Lost Customers", "Promising / Needs Attention"
     }
     assert df_rfm["customer_segment"].isin(valid_segments).all()
+
+
+def test_ecommerce_scd1_and_scd3_dimensions(ecom_pipeline):
+    """Verifies SCD Type 1 (in-place overwrite) and SCD Type 3 (current vs previous columns)."""
+    gold = ecom_pipeline["gold"]
+    df_scd1 = gold["dim_customer_scd1"]
+    df_scd3 = gold["dim_customer_scd3"]
+
+    # 1. SCD Type 1: Exactly 1 row per customer (91 rows), only current tier
+    assert len(df_scd1) == 91
+    assert df_scd1["customer_id"].is_unique
+    assert "loyalty_tier" in df_scd1.columns
+    assert "last_updated_at" in df_scd1.columns
+
+    # 2. SCD Type 3: Exactly 1 row per customer (91 rows) with current and previous tier columns
+    assert len(df_scd3) == 91
+    assert df_scd3["customer_id"].is_unique
+    assert "current_loyalty_tier" in df_scd3.columns
+    assert "previous_loyalty_tier" in df_scd3.columns
+    assert "current_credit_limit_usd" in df_scd3.columns
+    assert "previous_credit_limit_usd" in df_scd3.columns
+
+    # Verify that upgraded customers have previous tier populated
+    upgraded = df_scd3[df_scd3["current_loyalty_tier"] == "Platinum"]
+    assert len(upgraded) > 0
+    assert (upgraded["previous_loyalty_tier"] == "Gold").all()
+
