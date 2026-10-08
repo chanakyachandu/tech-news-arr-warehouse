@@ -1,58 +1,48 @@
-# 🏛️ Data Architecture: Tech News & ARR Data Platform
+# 🏛️ Multi-Domain Data Architecture & Dimensional Modeling Guide
 
-## 1. Architecture Overview (Medallion Design)
-This platform processes unstructured tech news and company metadata into an analytical warehouse using the **Medallion Architecture** (`Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold`):
+## 1. Enterprise Architecture Overview (Multi-Domain Medallion & Streaming Lakehouse)
+This platform implements an enterprise-grade **Multi-Domain Medallion Lakehouse** (`Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold`) combined with a **Real-Time Streaming & CDC Engine** (Event-Time Watermarking, Dead-Letter Queue `DLQ`, and atomic `MERGE INTO` reconciliation).
 
 ```
-[ BRONZE LAYER: Raw Ingestion ]
-  - Ingest raw source files (tech_news.csv, company_metadata.json) as-is.
-  - Zero mutations; preserves full historical lineage.
+[ MULTI-SOURCE INGESTION ]
+  ├─ Domain A (Batch):  tech_news.csv (750 articles), company_metadata.json (21 seed companies)
+  ├─ Domain B (Batch):  E-Commerce relational tables (orders, order_details, products, customers, categories)
+  └─ Domain C (Stream): Real-time JSONL event stream (data/stream_landing/)
           │
           ▼
-[ SILVER LAYER: Cleaning & Enrichment ]
-  - Canonicalize company name aliases (e.g. AWS -> Amazon Web Services).
-  - Standardize 19 messy categories into 7 clean taxonomy values (e.g. AI_ML).
-  - Parse multi-currency revenue (EUR, GBP, JPY, ranges) into normalized USD integers.
-  - Standardize dates into ISO / dd-mm-yyyy and extract year & quarter.
-  - Calculate company age and company size category (Small, Medium, Large).
+[ 1. BRONZE LAYER: Raw Ingestion & Schema Profiling ]
+  - Zero-mutation ingestion preserving full source provenance and raw line-level audit trails.
+  - Structural schema validation and automated null/type profiling.
           │
           ▼
-[ GOLD LAYER: Star Schema Warehouse ]
-  - Structured into 1 Dimension and 2 Fact tables for fast SQL analytics:
-    * dim_company (Master company dimension)
-    * fct_article (All news articles with standardized dates & categories)
-    * fct_arr_observation (Point-in-time revenue observations over time)
-    * agg_company_quarterly_arr (Pre-computed quarterly rollups)
-    * view_company_latest_arr (Latest point-in-time snapshot per company)
-    * ai_articles_enriched.csv (Filtered export: AI/ML, 2022–2024, ARR > $50M)
+[ 2. SILVER LAYER: Cleansing, Normalization & Feature Engineering ]
+  - Domain A: Canonicalize company aliases (AWS -> Amazon Web Services), standardize 19 messy categories to 7, parse multi-currency FX (EUR, GBP, JPY, midpoint ranges) to normalized USD integers.
+  - Domain B: Parse ISO order dates, compute fulfillment duration (`fulfillment_days`), calculate gross, line discounts, and net financial totals.
+  - Domain C: Real-time schema validation with Dead-Letter Queue (`DLQ`) routing and Event-Time Watermarking (late-event cutoff).
+          │
+          ▼
+[ 3. GOLD LAYER: Multi-Domain Star Schema & Analytical Models ]
+  - Domain A (Tech News & ARR):
+    * dim_company (Master company dimension, N = 26)
+    * fct_article (750 news articles with standardized dates & categories)
+    * fct_arr_observation (558 point-in-time revenue observations in USD)
+    * agg_company_quarterly_arr (315 quarterly financial rollups)
+    * view_company_latest_arr (26 company point-in-time latest ARR snapshots)
+    * ai_articles_enriched.csv (124 filtered AI/ML records with ARR > $50M)
+  - Domain B (E-Commerce Omnichannel Retail):
+    * dim_customer_scd2 (Slowly Changing Dimension Type 2 with historical loyalty tier versioning, N = 175)
+    * dim_product (77 SKUs with category denormalization, margin & stock health flags)
+    * dim_date (732 calendar date records with Year, Quarter, Month, Weekend flags)
+    * fct_orders (830 orders with fulfillment duration and net financial totals)
+    * fct_order_items (2,155 line items with gross, discount rate, and net totals)
+    * agg_customer_rfm (89 customer 360 RFM segmentation profiles)
 ```
 
 ---
 
-## 2. Dimensional Data Model & Table Specifications
+## 2. Dimensional Data Models
 
-### A. Raw Source Columns (Input Data)
-The pipeline starts with raw tech news articles containing these 10 core columns:
-
-| Raw Column | Description & Examples | Where It Maps in the Gold Model |
-| :--- | :--- | :--- |
-| **`article_id`** | Unique article identifier (`ART0001`, `ART0002`) | Primary Key in `fct_article`, Foreign Key in `fct_arr_observation` |
-| **`title`** | News headline text | Preserved in `fct_article.title` |
-| **`company_name`** | Mentioned company name (includes aliases like AWS) | Canonicalized & linked via `company_id` to `dim_company` |
-| **`published_date`** | Messy dates (`21-Feb-20`, `02/23/2023`, `13-12-2023`) | Parsed to datetime $\rightarrow$ `fct_article.published_date` (`dd-mm-yyyy`) |
-| **`category`** | Unstandardized category (`Artificial Intelligence`, `AI/ML`) | Standardized $\rightarrow$ `fct_article.category_clean` (`AI_ML`) |
-| **`revenue`** | Raw revenue strings (`$980.0M`, `£244M`, `$10M - $20M`) | Parsed to normalized USD $\rightarrow$ `fct_arr_observation.arr_usd` |
-| **`summary`** | Article executive brief | Preserved in `fct_article.summary` |
-| **`url`** | Source article URL link | Preserved in `fct_article.url` for provenance |
-| **`author`** | Journalist / reporter name | Preserved in `fct_article.author` |
-| **`word_count`** | Article word length integer | Preserved in `fct_article.word_count` |
-
-*(Enriched by `company_metadata.json`: `founded_year`, `headquarters`, `employee_count`, `industry`, `is_public`, `stock_ticker`)*
-
----
-
-### B. The Modeled Star Schema
-To eliminate data redundancy and enable fast analytical SQL queries, the raw input columns are separated into a clean **Star Schema**:
+### A. Domain A: Tech News & ARR Star Schema
 
 ```
                  +--------------------------------------+
@@ -78,13 +68,12 @@ To eliminate data redundancy and enable fast analytical SQL queries, the raw inp
 | PK article_id (ART0001, ...)  |   | PK observation_id (ARR0001, ...)   |
 | FK company_id                 |   | FK article_id                      |
 |    title                      |   | FK company_id                      |
-|    category_clean             |   |    observation_date (dd-mm-yyyy)   |
-|    published_date (dd-mm-yyyy)|   |    observation_year                |
+|    category_clean             |   |    observation_date (YYYY-MM-DD)   |
+|    published_date_clean       |   |    observation_year                |
 |    published_year             |   |    observation_quarter             |
-|    published_quarter          |   |    arr_usd (Normalized Integer $)  |
-|    published_month            |   |    arr_usd_M (ARR in Millions)     |
-|    author                     |   +------------------------------------+
-|    word_count                 |
+|    published_month            |   |    arr_usd (Normalized Integer $)  |
+|    author                     |   |    arr_usd_M (ARR in Millions)     |
+|    word_count                 |   +------------------------------------+
 |    summary                    |
 |    url                        |
 +-------------------------------+
@@ -92,54 +81,108 @@ To eliminate data redundancy and enable fast analytical SQL queries, the raw inp
 
 ---
 
-### C. Table Grains & Key Responsibilities
+### B. Domain B: E-Commerce & Retail Star Schema (with SCD Type 2)
 
-1. **`dim_company`** (26 rows)
-   * **Grain**: 1 row per unique canonical company.
-   * **Keys**: Primary Key = `company_id` (`COMP001`, `COMP002`, ...).
-   * **Role**: Holds static company metadata (headquarters, employee count, industry, size category).
-
-2. **`fct_article`** (750 rows)
-   * **Grain**: 1 row per published news article.
-   * **Keys**: Primary Key = `article_id`, Foreign Key = `company_id`.
-   * **Role**: Stores article content, publication dates, cleaned categories, authors, and source URLs.
-
-3. **`fct_arr_observation`** (558 rows)
-   * **Grain**: 1 row per valid revenue/ARR observation.
-   * **Keys**: Primary Key = `observation_id`, Foreign Keys = `article_id`, `company_id`.
-   * **Role**: Stores point-in-time financial observations converted to exact USD integers. Articles with missing or undisclosed revenue are excluded to avoid distorting averages.
-
-4. **`agg_company_quarterly_arr`** (315 rows)
-   * **Grain**: 1 row per company per calendar quarter.
-   * **Role**: Pre-aggregated rollups (`latest_arr_usd_M`, `avg_arr_usd_M`, `max_arr_usd_M`, `min_arr_usd_M`).
-
-5. **`view_company_latest_arr`** (26 rows)
-   * **Grain**: 1 row per company.
-   * **Role**: Latest point-in-time ARR snapshot for each company.
-
-6. **`ai_articles_enriched.csv`** (124 rows)
-   * **Grain**: 1 row per high-growth AI article.
-   * **Role**: Final business deliverable filtered for AI/ML category or industry, published 2022–2024, with ARR > $50M.
+```
+                 +--------------------------------------+
+                 |          dim_customer_scd2           |
+                 +--------------------------------------+
+                 | PK customer_sk (CUST_SK_0001, ...)   |
+                 |    customer_id (ALFKI, ...)          |
+                 |    company_name                      |
+                 |    contact_name                      |
+                 |    city, country                     |
+                 |    loyalty_tier (Bronze/Silver/Gold) |
+                 |    credit_limit_usd                  |
+                 |    effective_start_date              |
+                 |    effective_end_date (9999-12-31)   |
+                 |    is_current_flag (True / False)    |
+                 +--------------------------------------+
+                        |
+               1-to-Many|
+                        v
++-------------------------------+   +------------------------------------+
+|          fct_orders           |   |            dim_product             |
++-------------------------------+   +------------------------------------+
+| PK order_id (10248, ...)      |   | PK product_sk (PROD_SK_001, ...)   |
+| FK customer_sk                |   |    product_id                      |
+| FK customer_id                |   |    product_name                    |
+| FK order_date_sk              |   |    category_name                   |
+|    order_date, required_date  |   |    category_description            |
+|    shipped_date               |   |    unit_price                      |
+|    fulfillment_days           |   |    units_in_stock, units_on_order  |
+|    is_shipped                 |   |    stock_status (In/Low/Out Stock) |
+|    freight                    |   |    is_discontinued                 |
+|    ship_country               |   +------------------------------------+
+|    total_gross_amount         |                       |
+|    total_discount_amount      |                       | 1-to-Many
+|    total_net_amount           |                       v
+|    total_items_count          |   +------------------------------------+
++-------------------------------+   |          fct_order_items           |
+        |                           +------------------------------------+
+        | 1-to-Many                 | PK order_item_sk (ITEM_SK_00001)   |
+        +-------------------------->| FK order_id                        |
+                                    | FK product_sk                      |
+                                    | FK product_id                      |
+                                    |    unit_price, quantity            |
+                                    |    discount_rate                   |
+                                    |    line_gross_amount               |
+                                    |    discount_amount                 |
+                                    |    line_net_amount                 |
+                                    +------------------------------------+
+```
 
 ---
 
-## 3. Core Business & Cleaning Rules
+## 3. Slowly Changing Dimension Type 2 (SCD 2) Mechanics
+
+In `dim_customer_scd2`, customer records track historical loyalty tier progressions and credit limit adjustments over time without losing historical purchase alignment:
+
+| `customer_sk` | `customer_id` | `company_name` | `loyalty_tier` | `credit_limit_usd` | `effective_start_date` | `effective_end_date` | `is_current_flag` |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
+| `CUST_SK_0007` | `BERGS` | Berglunds snabbköp | **Silver** | $10,000 | 1996-01-01 | 1997-06-30 | `False` |
+| `CUST_SK_0008` | `BERGS` | Berglunds snabbköp | **Gold** | $25,000 | 1997-07-01 | 1998-03-31 | `False` |
+| `CUST_SK_0009` | `BERGS` | Berglunds snabbköp | **Platinum** | $50,000 | 1998-04-01 | **9999-12-31** | **`True`** |
+
+* **Historical Point-in-Time Queries**: Joining `fct_orders.order_date BETWEEN dim_customer_scd2.effective_start_date AND dim_customer_scd2.effective_end_date` recovers the exact customer tier at the moment the purchase took place.
+* **Current State Queries**: Filtering `WHERE is_current_flag = True` yields the active customer profile.
+
+---
+
+## 4. Real-Time Streaming & CDC Engine Architecture
+
+The streaming CDC module (`medallion/streaming_cdc.py`) processes high-frequency JSON micro-batches from `data/stream_landing/`:
+
+1. **Payload Schema Validation**:
+   - Validates mandatory fields (`event_id`, `event_timestamp`, `op_code`, `article_id`, `company_name`).
+   - Ensures valid operation codes: `'I'` (Insert), `'U'` (Update), `'D'` (Delete).
+2. **Dead-Letter Queue (DLQ) Quarantining**:
+   - Any corrupt record (missing primary IDs, non-numeric ARR strings) is diverted to `data/dead_letter_queue/` with execution failure metadata and UTC timestamp.
+3. **Event-Time Watermarking**:
+   - Configurable watermark delay window (default = 48 hours).
+   - Events arriving with `event_timestamp < (current_time - watermark_window)` are dropped or logged as late arrivals to protect state stability.
+4. **Atomic `MERGE INTO` CDC Reconciliation**:
+   - Reconciles live insertions, financial revisions, and retractions directly against Gold star-schema tables (`fct_arr_observation`, `fct_article`, `dim_company`, `view_company_latest_arr`).
+
+---
+
+## 5. Core Business & Metric Calculation Rules
 
 1. **Multi-Currency Normalization to USD**:
-   * `EUR` $\times$ 1.10 = USD
-   * `GBP` $\times$ 1.27 = USD
-   * `JPY` $\div$ 150 = USD
-   * Revenue ranges (e.g. `"$10M - $20M"`) are calculated by taking the midpoint (`$15,000,000`).
-   * Output values are stored as exact integers (`arr_usd`) and millions (`arr_usd_M`).
-
-2. **Article ARR is NOT Company Master Data**:
-   * News articles report estimated, forward-looking, or leaked revenue that may conflict with audited reports.
-   * Therefore, revenue is modeled as **point-in-time observations** (`fct_arr_observation`) with full lineage back to the source article, rather than a single static field on `dim_company`.
-
-3. **Missing & Undisclosed Revenue**:
-   * Missing revenue values are preserved as nulls in `fct_article`, but completely excluded from `fct_arr_observation` so they never introduce false zeroes into financial averages.
-
+   - `EUR` $\times$ 1.10 = USD
+   - `GBP` $\times$ 1.27 = USD
+   - `JPY` $\div$ 150 = USD
+   - Revenue ranges (e.g., `"$10M - $20M"`) take the arithmetic midpoint (`$15,000,000`).
+2. **E-Commerce Financial Margin Math**:
+   - `line_gross_amount = unitPrice * quantity`
+   - `discount_amount = line_gross_amount * discount`
+   - `line_net_amount = line_gross_amount - discount_amount`
+3. **Customer 360 RFM Segmentation (`agg_customer_rfm`)**:
+   - **Recency ($R$)**: Days between snapshot date and customer's most recent order date.
+   - **Frequency ($F$)**: Total distinct order count per customer.
+   - **Monetary ($M$)**: Total net spend across all orders.
+   - Quartile scoring ($1 - 4$) determines segment assignment: *Champions*, *Loyal Customers*, *Recent Customers*, *At Risk - High Spenders*, *Lost Customers*.
 4. **Company Size Thresholds**:
-   * **Small**: $< 10,000$ employees
-   * **Medium**: $10,000$ – $30,000$ employees
-   * **Large**: $> 30,000$ employees
+   - **Small**: $< 10,000$ employees
+   - **Medium**: $10,000$ – $30,000$ employees
+   - **Large**: $> 30,000$ employees
