@@ -81,6 +81,13 @@ def get_raw_data(source_dir=None, metadata_file=None):
 
     # Concatenate all raw CSV files
     df_articles_raw = pd.concat([pd.read_csv(f, encoding='utf-8') for f in csv_files], ignore_index=True)
+
+    # 4. Explicit Schema Validation (Verify Mandatory Columns)
+    REQUIRED_ARTICLE_COLUMNS = {"article_id", "title", "company_name", "published_date", "category", "summary", "url"}
+    missing_article_cols = REQUIRED_ARTICLE_COLUMNS - set(df_articles_raw.columns)
+    if missing_article_cols:
+        raise ValueError(f"[Bronze Error] Schema validation failed! Raw article CSV is missing mandatory columns: {missing_article_cols}")
+
     if 'article_id' in df_articles_raw.columns:
         df_articles_raw = df_articles_raw.drop_duplicates(subset=['article_id']).reset_index(drop=True)
 
@@ -92,6 +99,11 @@ def get_raw_data(source_dir=None, metadata_file=None):
         .reset_index()
         .rename(columns={'index': 'company_name'})
     )
+
+    REQUIRED_COMPANY_COLS = {"company_name", "industry", "founded_year", "headquarters"}
+    missing_company_cols = REQUIRED_COMPANY_COLS - set(df_companies_raw.columns)
+    if missing_company_cols:
+        raise ValueError(f"[Bronze Error] Schema validation failed! Company metadata is missing mandatory keys: {missing_company_cols}")
 
     return df_articles_raw, df_companies_raw
 
