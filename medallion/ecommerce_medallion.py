@@ -553,9 +553,12 @@ class EcommerceMedallionPipeline:
 
         return {
             "duration_sec": duration,
-            "bronze_tables": len(bronze_data),
-            "silver_tables": len(silver_data),
-            "gold_tables": len(gold_data)
+            "bronze_data": bronze_data,
+            "silver_data": silver_data,
+            "gold_data": gold_data,
+            "bronze_tables_count": len(bronze_data),
+            "silver_tables_count": len(silver_data),
+            "gold_tables_count": len(gold_data)
         }
 
 

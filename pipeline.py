@@ -20,7 +20,7 @@ from medallion.streaming_cdc import run_streaming_pipeline
 from medallion.ecommerce_medallion import run_ecommerce_pipeline
 
 
-def run_all_pipelines(include_streaming: bool = False):
+def run_all_pipelines(include_streaming: bool = False, include_lineage: bool = False):
     """Runs end-to-end Medallion pipelines across all enterprise domains."""
     master_start = time.time()
     
@@ -65,16 +65,53 @@ def run_all_pipelines(include_streaming: bool = False):
         print("#" * 80)
         run_streaming_pipeline()
 
+    # -------------------------------------------------------------------------
+    # DATA CONTRACTS & QUALITY SCORECARD EVALUATION
+    # -------------------------------------------------------------------------
+    from medallion.data_contracts import DataContractValidator
+    from medallion.gold import generate_company_id_map, build_dim_company, build_fct_article, build_fct_arr_observation
+
+    co_map = generate_company_id_map(df_silver)
+    news_gold_dict = {
+        "dim_company": build_dim_company(df_silver, co_map),
+        "fct_article": build_fct_article(df_silver, co_map),
+        "fct_arr_observation": build_fct_arr_observation(df_silver, co_map)
+    }
+
+    validator = DataContractValidator()
+    report = validator.validate_all(
+        tech_news_gold=news_gold_dict,
+        ecommerce_gold=ecom_metrics.get("gold_data", {})
+    )
+    print("\n")
+    validator.print_scorecard(report)
+
+    # -------------------------------------------------------------------------
+    # AUTOMATED DATA LINEAGE & GOVERNANCE CATALOG
+    # -------------------------------------------------------------------------
+    from medallion.lineage import DataLineageCatalog
+    lineage_engine = DataLineageCatalog()
+    catalog = lineage_engine.generate_catalog(
+        tech_news_gold=news_gold_dict,
+        ecommerce_gold=ecom_metrics.get("gold_data", {})
+    )
+    if include_lineage:
+        print("\n")
+        lineage_engine.print_lineage_summary(catalog)
+
     total_time = round(time.time() - master_start, 3)
     print("\n" + "=" * 80)
     print(f"[SUCCESS] Multi-Domain Platform Execution Completed in {total_time}s!")
     print("          All Lakehouse deliverables materialized into 'data/warehouse/'.")
+    print(f"          Quality Scorecard -> 'data/data_quality_report.json'")
+    print(f"          Governance Lineage Catalog -> 'data/metadata_catalog.json'")
     print("=" * 80)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Multi-Domain Lakehouse Pipeline Runner")
     parser.add_argument("--streaming", action="store_true", help="Include real-time streaming CDC simulation")
+    parser.add_argument("--lineage", action="store_true", help="Print visual Data Lineage & Governance Catalog summary")
     args = parser.parse_args()
     
-    run_all_pipelines(include_streaming=args.streaming)
+    run_all_pipelines(include_streaming=args.streaming, include_lineage=args.lineage)
