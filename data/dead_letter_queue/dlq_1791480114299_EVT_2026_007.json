@@ -1,0 +1,12 @@
+{
+  "quarantined_at": "2026-10-08T17:21:54.299238+00:00",
+  "failure_reason": "Missing or empty required field: `article_id`",
+  "raw_payload": {
+    "event_id": "EVT_2026_007",
+    "event_timestamp": "2026-10-08T17:21:54.044504+00:00",
+    "op_code": "I",
+    "title": "Corrupt Payload Without Identification",
+    "category": "Unknown",
+    "arr_usd_M": "INVALID_NUMBER_STRING"
+  }
+}
