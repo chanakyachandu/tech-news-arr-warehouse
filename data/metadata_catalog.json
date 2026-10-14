@@ -1,7 +1,7 @@
 {
   "catalog_metadata": {
     "platform": "Multi-Domain Enterprise Lakehouse",
-    "generated_at": "2026-10-09T21:29:03.414168",
+    "generated_at": "2026-10-14T06:30:53.216910",
     "governance_standard": "Medallion (Bronze/Silver/Gold) + Kimball Dimensional",
     "domains": [
       "Tech News & ARR Lakehouse",

@@ -229,11 +229,14 @@ The platform processes data across three distinct domains using a multi-stage Me
 * **OS**: Windows, macOS, Linux
 * **Memory**: Minimum 4GB RAM
 
-### Installation
-Clone the repository and install dependencies:
+### Installation & Environment Setup
+Clone the repository, configure environment variables, and install dependencies:
 ```bash
 git clone https://github.com/chanakyachandu/tech-news-arr-warehouse.git
 cd tech-news-arr-warehouse
+
+# Copy the sample environment file and add your Gemini API Key
+cp .env.example .env
 
 # Virtual environment setup
 python -m venv .venv
@@ -273,38 +276,51 @@ python text_to_sql.py
 
 ---
 
-## 🧪 3. Running Automated Tests
+## 🧪 3. Running Automated Tests & CI/CD
 
-A comprehensive `pytest` test suite validates currency parsing, range midpoints, category
-taxonomies, star schema grains, and referential integrity:
+A comprehensive `pytest` test suite validates currency parsing, range midpoints, category taxonomies, star schema grains, and referential integrity:
 
 ```bash
 pytest tests/ -v
 ```
 
-Output:
-```text
-tests/test_pipeline.py::test_currency_extraction PASSED
-tests/test_pipeline.py::test_revenue_parsing_formats PASSED
-tests/test_pipeline.py::test_revenue_range_midpoint PASSED
-tests/test_pipeline.py::test_fx_conversion_rates PASSED
-tests/test_pipeline.py::test_company_size_categorization PASSED
-tests/test_pipeline.py::test_category_taxonomy_mapping PASSED
-tests/test_pipeline.py::test_company_alias_resolution PASSED
-tests/test_pipeline.py::test_silver_structure PASSED
-tests/test_pipeline.py::test_dim_company_grain PASSED
-tests/test_pipeline.py::test_referential_integrity PASSED
-tests/test_pipeline.py::test_fct_arr_observation_integrity PASSED
-tests/test_pipeline.py::test_ai_articles_enriched_criteria PASSED
-============================= 12 passed in 0.65s ==============================
-```
+GitHub Actions automatically runs this test suite across **Python 3.10, 3.11, and 3.12** on every pull request and push to `main`.
 
 ---
 
-## 🏛️ 4. Data Architecture & Documentation
+## 💡 4. Engineering Trade-offs & Production Gotchas
 
-For full architectural designs, dimensional star schema specifications, surrogate key
-rationale, and cloud scaling patterns:
+Real-world data pipelines must be resilient to unexpected schema mutations and poison records. Here is how critical challenges were resolved:
+
+| Challenge / "What Broke" | Root Cause | Engineering Solution |
+| :--- | :--- | :--- |
+| **Malformed Ingestion Payloads** | Ingesting raw JSONL with corrupted types or missing required keys crashed batch runs. | **Dead-Letter Queue (DLQ)** isolation: Unprocessable records are quarantined into `data/dead_letter_queue/` with timestamped diagnostics without stopping the pipeline. |
+| **Out-of-Order CDC Events** | Updates arriving before original inserts caused phantom duplicates or missed states. | **Event-Time Watermarking & Idempotent `MERGE INTO`**: Reconciles operations (`I`, `U`, `D`) using surrogate primary key lookups and event timestamps. |
+| **Currency Inconsistencies (FX)** | Multi-currency ARR figures (EUR, GBP, USD, INR) skewed aggregate metric calculations. | **Standardized Silver Normalization**: Automated FX rate dictionary lookup with fallback logging to convert all revenue figures to unified USD. |
+| **SQL Injection in AI Queries** | LLM-generated SQL queries could execute destructive DDL/DML statements (`DROP`, `DELETE`). | **AST-Based SQL Safety Guard**: Read-only validation layer that parses the abstract syntax tree, blocks 16 destructive keywords, and injects safe row limit clamps (`LIMIT 100`). |
+
+---
+
+## 🛡️ 5. Defensive Engineering & Data Quality Metrics
+
+* **Zero-Orphan Foreign Keys**: Enforced referential integrity between fact tables (`fct_orders`, `fct_arr_observation`) and dimension tables.
+* **SCD Type 2 Audit Trail**: Historical tracking of customer loyalty tiers and company statuses with `is_current`, `valid_from`, and `valid_to` timestamps.
+* **In-Memory Analytical Speed**: Leveraging DuckDB column-oriented execution for sub-second analytical aggregations and window functions.
+
+---
+
+## 📋 6. Resume-Ready Portfolio Highlights
+
+> - **Multi-Domain Medallion Lakehouse**: Architected a 3-tier lakehouse platform (Bronze/Silver/Gold) processing unstructured tech news and retail telemetry into optimized star schema dimensional models in DuckDB.
+> - **Real-Time CDC & DLQ Engine**: Built an event-driven CDC streaming engine featuring event-time watermarking, atomic `MERGE INTO` deduplication, and a Dead-Letter Queue (DLQ) for resilient error recovery.
+> - **AI-Powered Analytics & Guardrails**: Integrated Google Gemini API for an AI Text-to-SQL copilot with AST-based SQL safety validation, self-correcting error loops, and executive brief synthesis.
+> - **Robust Testing & CI/CD**: Authored comprehensive `pytest` test suites with GitHub Actions CI workflows validating 100% referential integrity and schema invariants.
+
+---
+
+## 🏛️ 7. Data Architecture & Documentation
+
+For full architectural designs, dimensional star schema specifications, surrogate key rationale, and cloud scaling patterns:
 * See **[DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md)** for warehouse modeling & governance.
-* See **[Task.txt](Task.txt)** for original client requirements and specifications.
+* See **[Task.txt](Task.txt)** for original requirements and specifications.
 * See **[05_ai_text_to_sql.ipynb](notebooks/05_ai_text_to_sql.ipynb)** for interactive AI demo.
