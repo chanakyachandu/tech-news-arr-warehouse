@@ -76,43 +76,35 @@ flowchart TD
 
 ```
 tech-news-arr-warehouse/
-├── medallion/                         # ⚙️ Core Medallion Architecture Python Package
-│   ├── __init__.py                    # Exposes pipeline APIs
-│   ├── bronze.py                      # Bronze layer: Tech news raw ingestion
-│   ├── silver.py                      # Silver layer: Tech news cleaning & normalization
-│   ├── gold.py                        # Gold layer: Tech news star schema modeling
-│   ├── streaming_cdc.py               # ⚡ Real-time Streaming, Watermarking & CDC MERGE
-│   └── ecommerce_medallion.py         # 🛍️ E-Commerce Medallion, SCD Type 2 & RFM Analytics
+├── part1_tech_news_lakehouse/         # 📰 Project 1: Batch Star Schema Lakehouse
+│   ├── bronze.py                      # Raw ingestion & schema boundary gatekeeping
+│   ├── silver.py                      # FX currency normalization & entity resolution
+│   ├── gold.py                        # Dimensional star schema (dim_company, fct_article, fct_arr)
+│   ├── pipeline.py                    # Dedicated Part 1 pipeline runner
+│   ├── notebooks/                     # Interactive demonstration notebooks (01 to 05)
+│   ├── advanced_semantic_search/      # 🤖 Vector Embeddings & Hybrid Search
+│   ├── ai_text_to_sql/                # 💬 DataTalker AI Text-to-SQL Assistant
+│   └── text_to_sql.py                 # 💬 Project 1 Interactive Text-to-SQL CLI Launcher
 │
-├── notebooks/                         # 📓 Interactive Walkthrough & Demonstration Notebooks
-│   ├── 01_bronze.ipynb                # Ingestion & raw data profiling
-│   ├── 02_silver.ipynb                # Cleaning, FX normalization & entity resolution
-│   ├── 03_gold.ipynb                  # Relational star schema warehouse & aggregations
-│   ├── 04_sql_queries.ipynb           # SQL analytics (DuckDB & SQLite) over warehouse tables
-│   ├── 05_ai_text_to_sql.ipynb        # 🤖 Interactive AI Text-to-SQL Assistant Walkthrough
-│   ├── 06_realtime_cdc_streaming.ipynb# ⚡ Real-Time Streaming & CDC Reconciliation Walkthrough
-│   └── 07_ecommerce_lakehouse_scd2.ipynb # 🛍️ E-Commerce Lakehouse, SCD Type 2 & RFM Walkthrough
+├── part2_slowly_changing_dimensions/  # 🔄 Project 2: Slowly Changing Dimensions (SCD 1, 2, 3)
+│   ├── scd_pipeline.py                # Pure functional Python SCD engine (0 classes)
+│   └── scd_demonstration.ipynb        # SCD comparison & DuckDB point-in-time SQL demo
 │
-├── ai_text_to_sql/                    # 🤖 Natural Language to SQL Assistant Package
-│   ├── __init__.py
-│   ├── schema_provider.py             # DuckDB loader & dynamic schema prompt extractor
-│   ├── sql_guard.py                   # Read-Only AST validator, command blocker & limit injector
-│   ├── sql_generator.py               # Gemini AI SQL generator & executive result explainer
-│   └── cli.py                         # Interactive terminal loop
+├── part3_realtime_streaming_cdc/      # ⚡ Project 3: Real-Time Streaming & CDC Reconciliation
+│   ├── streaming_cdc.py               # Micro-batches, 48h watermarking, DLQ & atomic MERGE
+│   └── realtime_cdc_streaming.ipynb   # Interactive streaming event demo
 │
-├── tests/                             # 🧪 Automated Test Suite (pytest - 22 Tests)
-│   ├── __init__.py
-│   ├── test_pipeline.py               # Tech news data quality & star schema integrity (12 Tests)
-│   ├── test_streaming_cdc.py          # Streaming, Watermark, DLQ & CDC reconciliation (5 Tests)
-│   └── test_ecommerce.py              # E-Commerce Bronze, Silver math, SCD 2 & RFM tests (5 Tests)
+├── part4_data_contracts_lineage/      # 🛡️ Project 4: Enterprise Quality & Governance
+│   ├── data_contracts.py              # Programmatic constraints validator (PK, NOT NULL, Range, FK)
+│   └── lineage.py                     # Table & column-level provenance catalog engine
 │
-├── advanced_semantic_search/          # 🤖 Advanced Vector Search & Embeddings Module
-│   ├── semantic_search.ipynb          # Cosine similarity, vector search & hybrid filtering
-│   ├── README.md                      # Semantic search documentation
-│   └── data/embeddings/               # Pre-computed dense vector matrix (.npy)
+├── tests/                             # 🧪 Automated Test Suite (pytest - 28 Tests)
+│   ├── test_part1_lakehouse.py        # Part 1 Star Schema & transformations (12 Tests)
+│   ├── test_part2_scd.py              # Part 2 SCD surrogate keys & date ranges (6 Tests)
+│   ├── test_part3_streaming.py        # Part 3 Streaming, watermark & DLQ (5 Tests)
+│   └── test_part4_governance.py       # Part 4 Data contracts & lineage catalog (5 Tests)
 │
 ├── pipeline.py                        # 🚀 Multi-domain master CLI orchestrator
-├── text_to_sql.py                     # 💬 Interactive Text-to-SQL conversational agent launcher
 ├── DATA_ARCHITECTURE.md               # Dimensional star schema specifications & governance
 ├── README.md                          # Master documentation and portfolio guide
 ├── Task.txt                           # Project specification document
@@ -146,74 +138,69 @@ tech-news-arr-warehouse/
 
 The platform processes data across three distinct domains using a multi-stage Medallion architecture:
 
-| Stage | Modules & Code | Input Sources | Primary Responsibilities |
+| Project Domain | Directory & Code | Input Sources | Primary Responsibilities |
 | :--- | :--- | :--- | :--- |
-| **1. Bronze** | [`medallion/bronze.py`](medallion/bronze.py)<br>[`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) | `data/raw/*.csv`<br>`data/raw/ecommerce/` | Raw ingestion, deduplication, schema boundary enforcement. |
-| **2. Silver** | [`medallion/silver.py`](medallion/silver.py)<br>[`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) | Bronze DataFrames | Currency normalization (USD), entity resolution, category mapping, datetime standardization. |
-| **3. Gold** | [`medallion/gold.py`](medallion/gold.py)<br>[`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) | Silver DataFrames | Dimensional Star Schema modeling, Surrogate Keys, SCD Type 2 history, Customer RFM aggregations. |
-| **4. Streaming & CDC** | [`medallion/streaming_cdc.py`](medallion/streaming_cdc.py) | `data/stream_landing/` | Event-time watermarking (48h cutoff), DLQ error quarantine, atomic `MERGE INTO` reconciliation. |
-| **5. Analytics & AI** | [`ai_text_to_sql/`](ai_text_to_sql)<br>[`advanced_semantic_search/`](advanced_semantic_search) | Gold Warehouse Tables | AST-guarded Text-to-SQL ("DataTalker AI"), 384-dimensional dense semantic search. |
+| **Project 1: Tech News Lakehouse** | [`part1_tech_news_lakehouse/`](part1_tech_news_lakehouse) | `data/raw/*.csv` | Medallion lakehouse (Bronze, Silver, Gold), FX normalization, Star Schema, AI text-to-SQL. |
+| **Project 2: Slowly Changing Dimensions** | [`part2_slowly_changing_dimensions/`](part2_slowly_changing_dimensions) | `data/raw/ecommerce/` | Procedural implementation of SCD Type 1, Type 2 (history tracking), and Type 3 (prior state). |
+| **Project 3: Streaming & CDC** | [`part3_realtime_streaming_cdc/`](part3_realtime_streaming_cdc) | `data/stream_landing/` | Event-time watermarking (48h cutoff), DLQ error quarantine, atomic `MERGE INTO` reconciliation. |
+| **Project 4: Contracts & Lineage** | [`part4_data_contracts_lineage/`](part4_data_contracts_lineage) | Gold Warehouse Tables | Programmatic data quality contract enforcement and column-level lineage governance catalog. |
 
 
-### 1. Bronze Stage (Raw Multi-Domain Ingestion)
-* **Code**: [`medallion/bronze.py`](medallion/bronze.py) & [`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) |
-  **Notebooks**: [`01_bronze.ipynb`](notebooks/01_bronze.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
-* **Inputs**: Raw CSVs in `data/raw/*.csv` (`tech_news.csv`, `company_metadata.json`) and `data/raw/ecommerce/*.csv` (`customers`, `products`, `categories`, `orders`, `order_details`).
+### 1. Project 1: Tech News Lakehouse & Star Schema
+* **Code**: [`part1_tech_news_lakehouse/`](part1_tech_news_lakehouse) (`bronze.py`, `silver.py`, `gold.py`, `text_to_sql.py`) |
+  **Notebooks**: `part1_tech_news_lakehouse/notebooks/` (01 to 05)
+* **Inputs**: Raw CSVs in `data/raw/*.csv` (`tech_news.csv`, `company_metadata.json`).
 * **Process**:
-  * **Multi-File Batch Ingestion**: Ingests raw structured CSVs and flattens nested JSON metadata without schema mutation.
-  * **Deduplication**: Enforces `drop_duplicates()` across natural primary keys to guarantee idempotent re-runs.
-  * **Zero-Loss Provenance**: Passes clean DataFrames to Silver preserving source lineage.
+  * **Bronze**: Ingests raw structured CSVs and flattens metadata without schema mutation.
+  * **Silver**: Resolves aliases to canonical entities, normalizes currencies to USD (`arr_usd_M`).
+  * **Gold**: Models 1NF-3NF Star Schema (`dim_company`, `fct_article`, `fct_arr_observation`).
 
-### 2. Silver Stage (Cleaning, Canonicalization & Feature Engineering)
-* **Code**: [`medallion/silver.py`](medallion/silver.py) & [`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) |
-  **Notebooks**: [`02_silver.ipynb`](notebooks/02_silver.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
+### 2. Project 2: Slowly Changing Dimensions (SCD 1, 2, 3)
+* **Code**: [`part2_slowly_changing_dimensions/scd_pipeline.py`](part2_slowly_changing_dimensions/scd_pipeline.py) |
+  **Notebook**: [`part2_slowly_changing_dimensions/scd_demonstration.ipynb`](part2_slowly_changing_dimensions/scd_demonstration.ipynb)
 * **Process**:
-  * **Domain A (Tech News)**: `COMPANY_NAME_MAPPING` resolves 46 aliases to 21 canonical entities; `CATEGORY_MAPPING` maps 19 raw tags to 7 clean taxonomies; `FX_RATES_TO_USD` converts EUR, GBP, JPY and revenue ranges to normalized USD integers (`revenue_usd_M`).
-  * **Domain B (E-Commerce)**: Standardizes ISO order/shipping timestamps; calculates fulfillment duration (`fulfillment_days`); computes line-item financial formulas (`line_gross_amount`, `discount_amount`, `line_net_amount`); denormalizes product category metadata and stock health statuses.
-* **Outputs**: `data/processed/tech_news_clean.csv` and `data/processed/ecommerce/` silver tables.
+  * **SCD Type 1**: In-place overwrites for non-historical corrections.
+  * **SCD Type 2**: Comprehensive audit trail with `is_current_flag`, `effective_start_date`, and `effective_end_date`.
+  * **SCD Type 3**: Preserves immediate previous value in dedicated `previous_*` attribute columns.
 
-### 3. Gold Stage (Multi-Domain Star Schema & SCD Type 2)
-* **Code**: [`medallion/gold.py`](medallion/gold.py) & [`medallion/ecommerce_medallion.py`](medallion/ecommerce_medallion.py) |
-  **Notebooks**: [`03_gold.ipynb`](notebooks/03_gold.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
-* **Process**:
-  * **Deterministic Surrogate Keys**: Assigns surrogate alphanumeric keys (`COMP001`, `CUST_SK_0001`, `PROD_SK_001`, `ITEM_SK_00001`).
-  * **Slowly Changing Dimension Type 2 (`dim_customer_scd2`)**: Tracks customer loyalty tier progressions (Bronze &rarr; Silver &rarr; Gold &rarr; Platinum) and credit limit adjustments with `effective_start_date`, `effective_end_date`, and `is_current_flag`.
-  * **Star Schema Facts**: Builds `fct_article`, `fct_arr_observation`, `fct_orders`, and `fct_order_items`.
-  * **Customer 360 RFM Analytics (`agg_customer_rfm`)**: Pre-computes Recency, Frequency, and Monetary scores, assigning customers to behavioral cohorts (*Champions*, *Loyal Customers*, *At Risk*, *Lost*).
-* **Outputs**: Exported relational CSVs in `data/warehouse/` and `data/warehouse/ecommerce/`.
-
-### 4. Real-Time Streaming & CDC Layer
-* **Code**: [`medallion/streaming_cdc.py`](medallion/streaming_cdc.py) |
-  **Notebook**: [`06_realtime_cdc_streaming.ipynb`](notebooks/06_realtime_cdc_streaming.ipynb)
+### 3. Project 3: Real-Time Streaming & CDC Layer
+* **Code**: [`part3_realtime_streaming_cdc/streaming_cdc.py`](part3_realtime_streaming_cdc/streaming_cdc.py) |
+  **Notebook**: [`part3_realtime_streaming_cdc/realtime_cdc_streaming.ipynb`](part3_realtime_streaming_cdc/realtime_cdc_streaming.ipynb)
 * **Process**:
   * **Event-Time Watermarking**: Evaluates incoming events against a 48-hour watermark window, discarding late arrivals.
-  * **Dead-Letter Queue (DLQ)**: Quarantines corrupted or malformed payloads into `data/dead_letter_queue/` with error metadata.
-  * **Atomic `MERGE INTO` CDC Reconciliation**: Reconciles live `INSERT`, `UPDATE`, and `DELETE` op-codes directly into Gold tables.
+  * **Dead-Letter Queue (DLQ)**: Quarantines corrupted or malformed payloads into `data/dead_letter_queue/`.
+  * **Atomic `MERGE INTO` CDC Reconciliation**: Reconciles live `INSERT`, `UPDATE`, and `DELETE` events into Gold tables.
 
-### 5. Multi-Domain Pipeline Orchestration
+### 4. Project 4: Enterprise Quality Contracts & Lineage Governance
+* **Code**: [`part4_data_contracts_lineage/`](part4_data_contracts_lineage) (`data_contracts.py`, `lineage.py`)
+* **Process**:
+  * Programmatic assertion of primary keys, nullability, range boundaries, and referential integrity.
+  * Dynamic column-level and table-level lineage catalog with transformation provenance export.
+
+### 5. Multi-Project Pipeline Orchestration
 * **Code**: [`pipeline.py`](pipeline.py)
 * **Process**:
-  * Executes all domains end-to-end in-memory via `python pipeline.py --streaming` with stage latency telemetry in **~0.56 seconds**.
+  * Executes all 4 projects end-to-end sequentially via `python pipeline.py --streaming` with stage latency telemetry.
 
 ### 6. Automated Quality Testing Layer
 * **Code**: [`tests/`](tests/) | **Runner**: `pytest`
-* **Coverage**: **22 passing tests** asserting FX math, range midpoints, table grains, SCD 2 active flags, watermarking cutoff, and zero orphan foreign keys.
+* **Coverage**: **28 passing tests** asserting FX math, star schema grains, SCD 1/2/3 logic, watermarking cutoff, data contracts, and lineage generation.
 
 ### 7. Analytical SQL Exploration Layer
-* **Notebooks**: [`04_sql_queries.ipynb`](notebooks/04_sql_queries.ipynb) & [`07_ecommerce_lakehouse_scd2.ipynb`](notebooks/07_ecommerce_lakehouse_scd2.ipynb)
+* **Notebooks**: [`part1_tech_news_lakehouse/notebooks/04_sql_queries.ipynb`](part1_tech_news_lakehouse/notebooks/04_sql_queries.ipynb)
 * **Process**:
-  * Zero-copy in-memory DuckDB queries for window rankings, quarter-over-quarter ARR growth, product category margins, and market basket affinity.
+  * Zero-copy in-memory DuckDB queries for window rankings, quarter-over-quarter ARR growth, and category aggregations.
 
 ### 8. Downstream AI & Semantic Search Layer
-* **Code**: [`advanced_semantic_search/`](advanced_semantic_search) |
-  **Notebook**: [`semantic_search.ipynb`](advanced_semantic_search/semantic_search.ipynb)
+* **Code**: [`part1_tech_news_lakehouse/advanced_semantic_search/`](part1_tech_news_lakehouse/advanced_semantic_search) |
+  **Notebook**: [`part1_tech_news_lakehouse/advanced_semantic_search/semantic_search.ipynb`](part1_tech_news_lakehouse/advanced_semantic_search/semantic_search.ipynb)
 * **Process**:
-  * 384-dimensional dense sentence embeddings (`article_embeddings.npy`) for cosine similarity search and hybrid SQL metadata filtering.
+  * 384-dimensional dense sentence embeddings for cosine similarity search and hybrid SQL metadata filtering.
 
 ### 9. Natural Language to SQL Assistant Layer ("DataTalker AI")
-* **Code**: [`ai_text_to_sql/`](ai_text_to_sql) |
-  **Launcher**: [`text_to_sql.py`](text_to_sql.py) |
-  **Notebook**: [`05_ai_text_to_sql.ipynb`](notebooks/05_ai_text_to_sql.ipynb)
+* **Code**: [`part1_tech_news_lakehouse/ai_text_to_sql/`](part1_tech_news_lakehouse/ai_text_to_sql) |
+  **Launcher**: [`part1_tech_news_lakehouse/text_to_sql.py`](part1_tech_news_lakehouse/text_to_sql.py) |
+  **Notebook**: [`part1_tech_news_lakehouse/notebooks/05_ai_text_to_sql.ipynb`](part1_tech_news_lakehouse/notebooks/05_ai_text_to_sql.ipynb)
 * **Components**:
   * **Schema Provider**: Dynamically inspects tables, types, foreign keys, and sample rows.
   * **AST Safety Guard**: Blocks 16 destructive keywords and injects row limits.
@@ -254,24 +241,24 @@ pip install -r requirements.txt
 
 ## ⚡ 2. How to Run the Pipeline
 
-### Option A: Run the End-to-End Batch Pipeline
-Execute the full Medallion pipeline from raw ingestion through Gold warehouse export:
+### Option A: Run the End-to-End Master Pipeline (All 4 Projects)
+Execute the multi-project orchestrator across all 4 data engineering domains:
 ```bash
 python pipeline.py
 ```
 
-### Option B: Run Individual Medallion Stages
-Each medallion stage can also be executed independently as a standalone module:
+### Option B: Run Project 1 Medallion Lakehouse Stages
+Each medallion stage can also be executed independently:
 ```bash
-python -m medallion.bronze   # Run Bronze raw ingestion
-python -m medallion.silver   # Run Silver cleaning & export tech_news_clean.csv
-python -m medallion.gold     # Run Gold dimensional modeling & exports
+python -m part1_tech_news_lakehouse.bronze   # Run Bronze raw ingestion
+python -m part1_tech_news_lakehouse.silver   # Run Silver cleaning & normalization
+python -m part1_tech_news_lakehouse.gold     # Run Gold dimensional modeling & exports
 ```
 
-### Option C: Launch the Interactive AI Text-to-SQL Assistant
+### Option C: Launch the Interactive AI Text-to-SQL Assistant (Project 1)
 Chat directly with the modeled warehouse dataset using plain English:
 ```bash
-python text_to_sql.py
+python part1_tech_news_lakehouse/text_to_sql.py
 ```
 
 ---

@@ -68,28 +68,23 @@ class DataLineageCatalog:
                     ]
                 },
                 {
-                    "domain": "Domain B: E-Commerce Retail",
+                    "domain": "Domain B: Slowly Changing Dimensions (SCD 1, 2, 3)",
                     "sources": [
-                        "data/raw/ecommerce/customers.csv", "data/raw/ecommerce/products.csv",
-                        "data/raw/ecommerce/categories.csv", "data/raw/ecommerce/orders.csv",
+                        "data/raw/ecommerce/customers.csv",
+                        "data/raw/ecommerce/orders.csv",
                         "data/raw/ecommerce/order_details.csv"
                     ],
-                    "bronze": "ingest_bronze_ecommerce()",
+                    "bronze": "load_raw_customers()",
                     "silver": [
-                        "data/processed/ecommerce/silver_customers.csv",
-                        "data/processed/ecommerce/silver_products.csv",
-                        "data/processed/ecommerce/silver_orders.csv",
-                        "data/processed/ecommerce/silver_order_items.csv"
+                        "data/processed/ecommerce/silver_customers.csv"
                     ],
                     "gold_tables": [
-                        "dim_customer_scd1", "dim_customer_scd2", "dim_customer_scd3",
-                        "dim_product", "dim_date", "fct_orders", "fct_order_items",
-                        "agg_customer_rfm"
+                        "dim_customer_scd1", "dim_customer_scd2", "dim_customer_scd3"
                     ],
                     "downstream_consumers": [
-                        "Customer 360 RFM Marketing Cohorts",
-                        "Point-in-Time Historical SCD 2 Order Analytics",
-                        "Product Inventory Health & Market Basket Analysis"
+                        "Point-in-Time Historical Customer Audits",
+                        "Temporal Query Reporting (As-Of Joins)",
+                        "Current vs Previous State Cohort Tracking"
                     ]
                 },
                 {
@@ -118,14 +113,9 @@ class DataLineageCatalog:
                     "transformation": "CATEGORY_MAPPING (19 raw tags -> 7 standardized industry sectors)"
                 },
                 {
-                    "output_column": "fct_orders.fulfillment_days",
-                    "source_column": "orders.csv -> (shippedDate, orderDate)",
-                    "transformation": "DATE_DIFF_IN_DAYS (shipped_date - order_date)"
-                },
-                {
-                    "output_column": "fct_order_items.line_net_amount",
-                    "source_column": "order_details.csv -> (unitPrice, quantity, discount)",
-                    "transformation": "(unit_price * quantity) - ((unit_price * quantity) * discount)"
+                    "output_column": "dim_customer_scd1.loyalty_tier",
+                    "source_column": "customers.csv + spend -> tier",
+                    "transformation": "SCD_TYPE_1_OVERWRITE (Calculates current loyalty tier, overwriting previous value without history)"
                 },
                 {
                     "output_column": "dim_customer_scd2.is_current_flag",
@@ -133,9 +123,9 @@ class DataLineageCatalog:
                     "transformation": "SCD_TYPE_2_EXPIRATION (effective_end_date == '9999-12-31' -> True, else False)"
                 },
                 {
-                    "output_column": "agg_customer_rfm.customer_segment",
-                    "source_column": "orders.csv -> (order_date, order_id, total_net_amount)",
-                    "transformation": "RFM_QUINTILE_SCORING -> (Champions, Loyal Customers, At Risk, Lost)"
+                    "output_column": "dim_customer_scd3.previous_loyalty_tier",
+                    "source_column": "customers.csv + spend -> tier history",
+                    "transformation": "SCD_TYPE_3_PRIOR_STATE (Shifts previous active loyalty tier into adjacent column upon upgrade)"
                 }
             ],
             "tables": {}

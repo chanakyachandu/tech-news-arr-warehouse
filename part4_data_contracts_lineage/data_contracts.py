@@ -223,7 +223,7 @@ class DataContractValidator:
             _record("fct_arr_observation", "CHECK_RANGE", "observation_year BETWEEN 2000 AND 2030", p, s, d)
 
         # =====================================================================
-        # 2. DOMAIN B: E-COMMERCE CONTRACTS
+        # 2. DOMAIN B: SLOWLY CHANGING DIMENSIONS (SCD 1, 2, 3) CONTRACTS
         # =====================================================================
         dim_cust_scd1 = ecommerce_gold.get("dim_customer_scd1", pd.DataFrame())
         dim_cust_scd2 = ecommerce_gold.get("dim_customer_scd2", pd.DataFrame())
@@ -237,6 +237,12 @@ class DataContractValidator:
             p, _, s, d = self.check_unique(dim_cust_scd1, "customer_id")
             _record("dim_customer_scd1", "PRIMARY_KEY", "customer_id", p, s, d)
 
+            p, _, s, d = self.check_not_null(dim_cust_scd1, "loyalty_tier")
+            _record("dim_customer_scd1", "NOT_NULL", "loyalty_tier", p, s, d)
+
+            p, _, s, d = self.check_not_null(dim_cust_scd1, "last_updated_at")
+            _record("dim_customer_scd1", "NOT_NULL", "last_updated_at", p, s, d)
+
         if not dim_cust_scd2.empty:
             p, _, s, d = self.check_unique(dim_cust_scd2, "customer_sk")
             _record("dim_customer_scd2", "PRIMARY_KEY", "customer_sk", p, s, d)
@@ -247,9 +253,22 @@ class DataContractValidator:
             p, _, s, d = self.check_not_null(dim_cust_scd2, "effective_end_date")
             _record("dim_customer_scd2", "NOT_NULL", "effective_end_date", p, s, d)
 
+            p, _, s, d = self.check_not_null(dim_cust_scd2, "is_current_flag")
+            _record("dim_customer_scd2", "NOT_NULL", "is_current_flag", p, s, d)
+
+            allowed_tiers = {"Bronze", "Silver", "Gold", "Platinum"}
+            p, _, s, d = self.check_enum(dim_cust_scd2, "loyalty_tier", allowed_tiers)
+            _record("dim_customer_scd2", "ENUM_TAXONOMY", "loyalty_tier IN (Bronze, Silver, Gold, Platinum)", p, s, d)
+
         if not dim_cust_scd3.empty:
             p, _, s, d = self.check_unique(dim_cust_scd3, "customer_id")
             _record("dim_customer_scd3", "PRIMARY_KEY", "customer_id", p, s, d)
+
+            p, _, s, d = self.check_not_null(dim_cust_scd3, "current_loyalty_tier")
+            _record("dim_customer_scd3", "NOT_NULL", "current_loyalty_tier", p, s, d)
+
+            p, _, s, d = self.check_range(dim_cust_scd3, "current_credit_limit_usd", min_val=0.0)
+            _record("dim_customer_scd3", "CHECK_RANGE", "current_credit_limit_usd >= 0", p, s, d)
 
         if not dim_product.empty:
             p, _, s, d = self.check_unique(dim_product, "product_sk")

@@ -9,7 +9,11 @@ import sys
 import duckdb
 import pandas as pd
 from typing import Dict, Any, Optional, Tuple
-from openai import OpenAI
+
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = Any  # type: ignore
 
 # Support local imports whether running inside package or from root
 try:
@@ -51,12 +55,19 @@ DEFAULT_MODELS = [
 ]
 
 
-def get_gemini_client(api_key: Optional[str] = None) -> OpenAI:
+def get_gemini_client(api_key: Optional[str] = None):
     """Returns an OpenAI client configured for the Gemini API endpoint."""
+    try:
+        from openai import OpenAI as OpenAIClient
+    except ImportError:
+        raise ImportError(
+            "The 'openai' library is required to connect to Gemini via its OpenAI-compatible endpoint. "
+            "Please run: pip install openai"
+        )
     key = api_key or _find_gemini_key()
     if not key:
         raise ValueError("GEMINI_API_KEY not found. Please set GEMINI_API_KEY in your environment or a .env file.")
-    return OpenAI(api_key=key, base_url=GEMINI_BASE_URL)
+    return OpenAIClient(api_key=key, base_url=GEMINI_BASE_URL)
 
 
 def generate_sql(

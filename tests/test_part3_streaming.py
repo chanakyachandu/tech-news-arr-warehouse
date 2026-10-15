@@ -9,7 +9,7 @@ import tempfile
 import pytest
 import pandas as pd
 from datetime import datetime, timezone, timedelta
-from medallion.streaming_cdc import CDCStreamProcessor
+from part3_realtime_streaming_cdc.streaming_cdc import CDCStreamProcessor
 
 
 @pytest.fixture

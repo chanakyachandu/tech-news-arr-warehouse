@@ -42,95 +42,85 @@ This platform implements an enterprise-grade **Multi-Domain Medallion Lakehouse*
 
 ## 2. Dimensional Data Models
 
-### A. Domain A: Tech News & ARR Star Schema
+### A. Domain A: Tech News & ARR Lakehouse Model
 
 ```
-                 +--------------------------------------+
-                 |             dim_company              |
-                 +--------------------------------------+
-                 | PK company_id (COMP001, ...)         |
-                 |    company_name                      |
-                 |    industry                          |
-                 |    headquarters                      |
-                 |    founded_year                      |
-                 |    employee_count                    |
-                 |    company_size_category (Small/M/L) |
-                 |    is_public (True / False)          |
-                 |    stock_ticker                      |
-                 |    has_company_metadata              |
-                 +--------------------------------------+
-                        |                       |
-               1-to-Many|               1-to-Many
-                        v                       v
-+-------------------------------+   +------------------------------------+
-|          fct_article          |   |        fct_arr_observation         |
-+-------------------------------+   +------------------------------------+
-| PK article_id (ART0001, ...)  |   | PK observation_id (ARR0001, ...)   |
-| FK company_id                 |   | FK article_id                      |
-|    title                      |   | FK company_id                      |
-|    category_clean             |   |    observation_date (YYYY-MM-DD)   |
-|    published_date_clean       |   |    observation_year                |
-|    published_year             |   |    observation_quarter             |
-|    published_month            |   |    arr_usd (Normalized Integer $)  |
-|    author                     |   |    arr_usd_M (ARR in Millions)     |
-|    word_count                 |   +------------------------------------+
-|    summary                    |
-|    url                        |
-+-------------------------------+
+                      +---------------------+
+                      |     dim_company     |
+                      +---------------------+
+                      | PK: company_id      |
+                      +---------------------+
+                                 |
+                 +---------------+---------------+
+                 |                               |
+        (1-to-Many via company_id)      (1-to-Many via company_id)
+                 |                               |
+                 v                               v
+      +---------------------+         +---------------------+
+      |     fct_article     |         | fct_arr_observation |
+      +---------------------+         +---------------------+
+      | PK: article_id      |         | PK: observation_id  |
+      | FK: company_id      |         | FK: company_id      |
+      +---------------------+         | FK: article_id      |
+                                      +---------------------+
+```
+
+```mermaid
+erDiagram
+    dim_company ||--o{ fct_article : "company_id"
+    dim_company ||--o{ fct_arr_observation : "company_id"
+    fct_article ||--o{ fct_arr_observation : "article_id"
+
+    dim_company {
+        string company_id PK
+    }
+    fct_article {
+        string article_id PK
+        string company_id FK
+    }
+    fct_arr_observation {
+        string observation_id PK
+        string company_id FK
+        string article_id FK
+    }
 ```
 
 ---
 
-### B. Domain B: E-Commerce & Retail Star Schema (with SCD Type 2)
+### B. Domain B: Slowly Changing Dimensions (SCD Types 1, 2, & 3)
+
+Domain B focuses strictly on **Slowly Changing Dimensions (SCD)**: how to store and track customer attribute changes (such as loyalty tier upgrades from Bronze -> Silver -> Gold -> Platinum) over time.
 
 ```
-                 +--------------------------------------+
-                 |          dim_customer_scd2           |
-                 +--------------------------------------+
-                 | PK customer_sk (CUST_SK_0001, ...)   |
-                 |    customer_id (ALFKI, ...)          |
-                 |    company_name                      |
-                 |    contact_name                      |
-                 |    city, country                     |
-                 |    loyalty_tier (Bronze/Silver/Gold) |
-                 |    credit_limit_usd                  |
-                 |    effective_start_date              |
-                 |    effective_end_date (9999-12-31)   |
-                 |    is_current_flag (True / False)    |
-                 +--------------------------------------+
-                        |
-               1-to-Many|
-                        v
-+-------------------------------+   +------------------------------------+
-|          fct_orders           |   |            dim_product             |
-+-------------------------------+   +------------------------------------+
-| PK order_id (10248, ...)      |   | PK product_sk (PROD_SK_001, ...)   |
-| FK customer_sk                |   |    product_id                      |
-| FK customer_id                |   |    product_name                    |
-| FK order_date_sk              |   |    category_name                   |
-|    order_date, required_date  |   |    category_description            |
-|    shipped_date               |   |    unit_price                      |
-|    fulfillment_days           |   |    units_in_stock, units_on_order  |
-|    is_shipped                 |   |    stock_status (In/Low/Out Stock) |
-|    freight                    |   |    is_discontinued                 |
-|    ship_country               |   +------------------------------------+
-|    total_gross_amount         |                       |
-|    total_discount_amount      |                       | 1-to-Many
-|    total_net_amount           |                       v
-|    total_items_count          |   +------------------------------------+
-+-------------------------------+   |          fct_order_items           |
-        |                           +------------------------------------+
-        | 1-to-Many                 | PK order_item_sk (ITEM_SK_00001)   |
-        +-------------------------->| FK order_id                        |
-                                    | FK product_sk                      |
-                                    | FK product_id                      |
-                                    |    unit_price, quantity            |
-                                    |    discount_rate                   |
-                                    |    line_gross_amount               |
-                                    |    discount_amount                 |
-                                    |    line_net_amount                 |
-                                    +------------------------------------+
+       +-----------------------------------------------------------+
+       |                  Raw Customer Data Source                 |
+       |  (Customer Profile + Spend-Triggered Loyalty Progression) |
+       +-----------------------------------------------------------+
+                                     |
+         +---------------------------+---------------------------+
+         |                           |                           |
+         v                           v                           v
++------------------+       +-------------------+       +-------------------+
+|  dim_cust_scd1   |       |   dim_cust_scd2   |       |   dim_cust_scd3   |
++------------------+       +-------------------+       +-------------------+
+| PK customer_id   |       | PK customer_sk    |       | PK customer_id    |
+|    company_name  |       |    customer_id    |       |    company_name   |
+|    loyalty_tier  |       |    loyalty_tier   |       |    curr_loyalty   |
+|    credit_limit  |       |    credit_limit   |       |    prev_loyalty   |
+|    last_updated  |       |    start_date     |       |    curr_credit    |
++------------------+       |    end_date       |       |    prev_credit    |
+ (In-Place Overwrite)      |    is_current     |       |    change_date    |
+ (Zero History)            +-------------------+       +-------------------+
+                            (Full Versioning)           (Current vs Prev)
 ```
+
+#### SCD Pattern Comparison on the Same Customer:
+
+| Pattern | Table | Key Columns | Best Used For |
+| :--- | :--- | :--- | :--- |
+| **SCD Type 1** | `dim_customer_scd1` | `customer_id`, `loyalty_tier`, `last_updated_at` | Correcting errors, typos (no history needed) |
+| **SCD Type 2** | `dim_customer_scd2` | `customer_sk`, `effective_start_date`, `effective_end_date`, `is_current_flag` | Historical audit compliance, point-in-time financial joins |
+| **SCD Type 3** | `dim_customer_scd3` | `current_loyalty_tier`, `previous_loyalty_tier`, `tier_change_date` | Fast before-and-after marketing comparisons |
 
 ---
 
@@ -151,7 +141,7 @@ In `dim_customer_scd2`, customer records track historical loyalty tier progressi
 
 ## 4. Real-Time Streaming & CDC Engine Architecture
 
-The streaming CDC module (`medallion/streaming_cdc.py`) processes high-frequency JSON micro-batches from `data/stream_landing/`:
+The streaming CDC module (`part3_realtime_streaming_cdc/streaming_cdc.py`) processes high-frequency JSON micro-batches from `data/stream_landing/`:
 
 1. **Payload Schema Validation**:
    - Validates mandatory fields (`event_id`, `event_timestamp`, `op_code`, `article_id`, `company_name`).
@@ -169,20 +159,11 @@ The streaming CDC module (`medallion/streaming_cdc.py`) processes high-frequency
 ## 5. Core Business & Metric Calculation Rules
 
 1. **Multi-Currency Normalization to USD**:
-   - `EUR` $\times$ 1.10 = USD
-   - `GBP` $\times$ 1.27 = USD
-   - `JPY` $\div$ 150 = USD
+   - `EUR` $\times$ 1.09 = USD
+   - `GBP` $\times$ 1.28 = USD
+   - `JPY` $\times$ 0.0067 = USD
    - Revenue ranges (e.g., `"$10M - $20M"`) take the arithmetic midpoint (`$15,000,000`).
-2. **E-Commerce Financial Margin Math**:
-   - `line_gross_amount = unitPrice * quantity`
-   - `discount_amount = line_gross_amount * discount`
-   - `line_net_amount = line_gross_amount - discount_amount`
-3. **Customer 360 RFM Segmentation (`agg_customer_rfm`)**:
-   - **Recency ($R$)**: Days between snapshot date and customer's most recent order date.
-   - **Frequency ($F$)**: Total distinct order count per customer.
-   - **Monetary ($M$)**: Total net spend across all orders.
-   - Quartile scoring ($1 - 4$) determines segment assignment: *Champions*, *Loyal Customers*, *Recent Customers*, *At Risk - High Spenders*, *Lost Customers*.
-4. **Company Size Thresholds**:
+2. **Company Size Thresholds**:
    - **Small**: $< 10,000$ employees
    - **Medium**: $10,000$ – $30,000$ employees
    - **Large**: $> 30,000$ employees

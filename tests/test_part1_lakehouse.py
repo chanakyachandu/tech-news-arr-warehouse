@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from medallion.bronze import get_raw_data
-from medallion.silver import (
+from part1_tech_news_lakehouse.bronze import get_raw_data
+from part1_tech_news_lakehouse.silver import (
     extract_currency,
     parse_single_revenue,
     parse_revenue,
@@ -19,7 +19,7 @@ from medallion.silver import (
     COMPANY_NAME_MAPPING,
     CATEGORY_MAPPING
 )
-from medallion.gold import (
+from part1_tech_news_lakehouse.gold import (
     build_and_export_warehouse,
     generate_company_id_map,
     build_dim_company,

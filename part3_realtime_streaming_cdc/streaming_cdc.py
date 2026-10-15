@@ -7,10 +7,19 @@ and atomic MERGE INTO CDC reconciliation against warehouse star-schema tables.
 import os
 import json
 import time
+from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Tuple, Optional
 import pandas as pd
-from .bronze import _find_project_root
+
+
+def _find_project_root() -> Path:
+    """Finds the project root directory containing 'data'."""
+    current = Path(__file__).resolve().parent
+    for p in [current, current.parent, current.parent.parent]:
+        if (p / 'data').is_dir():
+            return p
+    return Path.cwd()
 
 
 class CDCStreamProcessor:

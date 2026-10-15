@@ -6,6 +6,10 @@ Allows users to chat with the DuckDB warehouse dataset in real-time.
 import sys
 import os
 
+CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
+if CURRENT_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_DIR)
+
 try:
     from .schema_provider import init_duckdb_warehouse, get_warehouse_schema_context
     from .sql_generator import ask_warehouse, get_gemini_client
