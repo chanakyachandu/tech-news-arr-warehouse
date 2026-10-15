@@ -1,48 +1,56 @@
-# 🏛️ Multi-Domain Data Architecture & Dimensional Modeling Guide
+# 🏛️ Data Architecture & Systems Design Guide
 
-## 1. Enterprise Architecture Overview (Multi-Domain Medallion & Streaming Lakehouse)
-This platform implements an enterprise-grade **Multi-Domain Medallion Lakehouse** (`Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold`) combined with a **Real-Time Streaming & CDC Engine** (Event-Time Watermarking, Dead-Letter Queue `DLQ`, and atomic `MERGE INTO` reconciliation).
-
-```
-[ MULTI-SOURCE INGESTION ]
-  ├─ Domain A (Batch):  tech_news.csv (750 articles), company_metadata.json (21 seed companies)
-  ├─ Domain B (Batch):  E-Commerce relational tables (orders, order_details, products, customers, categories)
-  └─ Domain C (Stream): Real-time JSONL event stream (data/stream_landing/)
-          │
-          ▼
-[ 1. BRONZE LAYER: Raw Ingestion & Schema Profiling ]
-  - Zero-mutation ingestion preserving full source provenance and raw line-level audit trails.
-  - Structural schema validation and automated null/type profiling.
-          │
-          ▼
-[ 2. SILVER LAYER: Cleansing, Normalization & Feature Engineering ]
-  - Domain A: Canonicalize company aliases (AWS -> Amazon Web Services), standardize 19 messy categories to 7, parse multi-currency FX (EUR, GBP, JPY, midpoint ranges) to normalized USD integers.
-  - Domain B: Parse ISO order dates, compute fulfillment duration (`fulfillment_days`), calculate gross, line discounts, and net financial totals.
-  - Domain C: Real-time schema validation with Dead-Letter Queue (`DLQ`) routing and Event-Time Watermarking (late-event cutoff).
-          │
-          ▼
-[ 3. GOLD LAYER: Multi-Domain Star Schema & Analytical Models ]
-  - Domain A (Tech News & ARR):
-    * dim_company (Master company dimension, N = 26)
-    * fct_article (750 news articles with standardized dates & categories)
-    * fct_arr_observation (558 point-in-time revenue observations in USD)
-    * agg_company_quarterly_arr (315 quarterly financial rollups)
-    * view_company_latest_arr (26 company point-in-time latest ARR snapshots)
-    * ai_articles_enriched.csv (124 filtered AI/ML records with ARR > $50M)
-  - Domain B (E-Commerce Omnichannel Retail):
-    * dim_customer_scd2 (Slowly Changing Dimension Type 2 with historical loyalty tier versioning, N = 175)
-    * dim_product (77 SKUs with category denormalization, margin & stock health flags)
-    * dim_date (732 calendar date records with Year, Quarter, Month, Weekend flags)
-    * fct_orders (830 orders with fulfillment duration and net financial totals)
-    * fct_order_items (2,155 line items with gross, discount rate, and net totals)
-    * agg_customer_rfm (89 customer 360 RFM segmentation profiles)
-```
+This repository contains **4 distinct, independent data engineering projects**. Rather than blending all domains into a single monolithic pipeline, each project showcases a specialized data engineering paradigm with dedicated code, tests, and storage.
 
 ---
 
-## 2. Dimensional Data Models
+## 🗺️ Project Portfolio Architecture Map
 
-### A. Domain A: Tech News & ARR Lakehouse Model
+| Project | Domain & Focus | Directory | Key Architectural Pattern |
+| :--- | :--- | :--- | :--- |
+| **Project 1** | Tech News & ARR Financials | [`part1_tech_news_lakehouse/`](file:///c:/Users/sivak/OneDrive/Pictures/blank_backup/Projectx/tech-news-arr-warehouse/part1_tech_news_lakehouse) | Medallion Lakehouse (`Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold`) + Star Schema |
+| **Project 2** | Customer Dimensions | [`part2_slowly_changing_dimensions/`](file:///c:/Users/sivak/OneDrive/Pictures/blank_backup/Projectx/tech-news-arr-warehouse/part2_slowly_changing_dimensions) | Slowly Changing Dimensions (`SCD Type 1`, `Type 2`, `Type 3`) |
+| **Project 3** | Event Streaming & CDC | [`part3_realtime_streaming_cdc/`](file:///c:/Users/sivak/OneDrive/Pictures/blank_backup/Projectx/tech-news-arr-warehouse/part3_realtime_streaming_cdc) | Micro-batch Streaming, 48h Watermarking, DLQ, and CDC `MERGE INTO` |
+| **Project 4** | Data Quality & Governance | [`part4_data_contracts_lineage/`](file:///c:/Users/sivak/OneDrive/Pictures/blank_backup/Projectx/tech-news-arr-warehouse/part4_data_contracts_lineage) | Programmatic Data Contracts & Column-Level Lineage Catalog |
+
+---
+
+## 1. Project 1: Tech News & ARR Star Schema Lakehouse
+
+### A. Architectural Purpose
+Showcases a classic **Batch Medallion Lakehouse** converting unstructured tech news articles and company metadata into an analytics-ready **Dimensional Star Schema** and downstream AI deliverables.
+
+### B. Medallion Data Flow
+```
+[ Raw CSV / JSON Files ]
+  ├─ tech_news.csv (750 articles)
+  └─ company_metadata.json (21 seed companies)
+          │
+          ▼
+[ 1. Bronze Layer (bronze.py) ]
+  ├─ Ingests raw structured CSV and nested company metadata
+  └─ Deduplicates records across natural keys (article_id, title)
+          │
+          ▼
+[ 2. Silver Layer (silver.py) ]
+  ├─ Canonicalizes 46 company aliases -> 21 master companies
+  ├─ Normalizes 19 messy categories -> 7 standard taxonomies
+  └─ Converts multi-currency revenue (EUR, GBP, JPY, ranges) -> USD integers (arr_usd_M)
+          │
+          ▼
+[ 3. Gold Layer (gold.py) ]
+  ├─ Materializes 3NF-compliant Star Schema (dim_company, fct_article, fct_arr_observation)
+  ├─ Generates pre-computed rollups (agg_company_quarterly_arr, view_company_latest_arr)
+  └─ Exports filtered AI/ML cohort (ai_articles_enriched.csv, ARR > $50M)
+          │
+          ▼
+[ Downstream AI & Analytics ]
+  ├─ 384-dimensional dense sentence embeddings for semantic search
+  └─ DataTalker AI Text-to-SQL Assistant with AST safety guardrails
+```
+
+### C. Dimensional Star Schema Model
+The Gold analytical warehouse is modeled strictly as a **Star Schema** with `dim_company` at the center and two fact tables capturing article publications and financial revenue observations:
 
 ```
                       +---------------------+
@@ -85,85 +93,195 @@ erDiagram
     }
 ```
 
----
+### D. Table Descriptions & Keys
+| Table Name | Role | Primary Key | Foreign Keys | Grain |
+| :--- | :--- | :--- | :--- | :--- |
+| `dim_company` | Dimension | `company_id` | *None* | 1 row per unique canonical company |
+| `fct_article` | Fact | `article_id` | `company_id` | 1 row per published news article |
+| `fct_arr_observation` | Fact | `observation_id` | `company_id`, `article_id` | 1 row per financial ARR metric observed |
 
-### B. Domain B: Slowly Changing Dimensions (SCD Types 1, 2, & 3)
-
-Domain B focuses strictly on **Slowly Changing Dimensions (SCD)**: how to store and track customer attribute changes (such as loyalty tier upgrades from Bronze -> Silver -> Gold -> Platinum) over time.
-
-```
-       +-----------------------------------------------------------+
-       |                  Raw Customer Data Source                 |
-       |  (Customer Profile + Spend-Triggered Loyalty Progression) |
-       +-----------------------------------------------------------+
-                                     |
-         +---------------------------+---------------------------+
-         |                           |                           |
-         v                           v                           v
-+------------------+       +-------------------+       +-------------------+
-|  dim_cust_scd1   |       |   dim_cust_scd2   |       |   dim_cust_scd3   |
-+------------------+       +-------------------+       +-------------------+
-| PK customer_id   |       | PK customer_sk    |       | PK customer_id    |
-|    company_name  |       |    customer_id    |       |    company_name   |
-|    loyalty_tier  |       |    loyalty_tier   |       |    curr_loyalty   |
-|    credit_limit  |       |    credit_limit   |       |    prev_loyalty   |
-|    last_updated  |       |    start_date     |       |    curr_credit    |
-+------------------+       |    end_date       |       |    prev_credit    |
- (In-Place Overwrite)      |    is_current     |       |    change_date    |
- (Zero History)            +-------------------+       +-------------------+
-                            (Full Versioning)           (Current vs Prev)
-```
-
-#### SCD Pattern Comparison on the Same Customer:
-
-| Pattern | Table | Key Columns | Best Used For |
-| :--- | :--- | :--- | :--- |
-| **SCD Type 1** | `dim_customer_scd1` | `customer_id`, `loyalty_tier`, `last_updated_at` | Correcting errors, typos (no history needed) |
-| **SCD Type 2** | `dim_customer_scd2` | `customer_sk`, `effective_start_date`, `effective_end_date`, `is_current_flag` | Historical audit compliance, point-in-time financial joins |
-| **SCD Type 3** | `dim_customer_scd3` | `current_loyalty_tier`, `previous_loyalty_tier`, `tier_change_date` | Fast before-and-after marketing comparisons |
-
----
-
-## 3. Slowly Changing Dimension Type 2 (SCD 2) Mechanics
-
-In `dim_customer_scd2`, customer records track historical loyalty tier progressions and credit limit adjustments over time without losing historical purchase alignment:
-
-| `customer_sk` | `customer_id` | `company_name` | `loyalty_tier` | `credit_limit_usd` | `effective_start_date` | `effective_end_date` | `is_current_flag` |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
-| `CUST_SK_0007` | `BERGS` | Berglunds snabbköp | **Silver** | $10,000 | 1996-01-01 | 1997-06-30 | `False` |
-| `CUST_SK_0008` | `BERGS` | Berglunds snabbköp | **Gold** | $25,000 | 1997-07-01 | 1998-03-31 | `False` |
-| `CUST_SK_0009` | `BERGS` | Berglunds snabbköp | **Platinum** | $50,000 | 1998-04-01 | **9999-12-31** | **`True`** |
-
-* **Historical Point-in-Time Queries**: Joining `fct_orders.order_date BETWEEN dim_customer_scd2.effective_start_date AND dim_customer_scd2.effective_end_date` recovers the exact customer tier at the moment the purchase took place.
-* **Current State Queries**: Filtering `WHERE is_current_flag = True` yields the active customer profile.
-
----
-
-## 4. Real-Time Streaming & CDC Engine Architecture
-
-The streaming CDC module (`part3_realtime_streaming_cdc/streaming_cdc.py`) processes high-frequency JSON micro-batches from `data/stream_landing/`:
-
-1. **Payload Schema Validation**:
-   - Validates mandatory fields (`event_id`, `event_timestamp`, `op_code`, `article_id`, `company_name`).
-   - Ensures valid operation codes: `'I'` (Insert), `'U'` (Update), `'D'` (Delete).
-2. **Dead-Letter Queue (DLQ) Quarantining**:
-   - Any corrupt record (missing primary IDs, non-numeric ARR strings) is diverted to `data/dead_letter_queue/` with execution failure metadata and UTC timestamp.
-3. **Event-Time Watermarking**:
-   - Configurable watermark delay window (default = 48 hours).
-   - Events arriving with `event_timestamp < (current_time - watermark_window)` are dropped or logged as late arrivals to protect state stability.
-4. **Atomic `MERGE INTO` CDC Reconciliation**:
-   - Reconciles live insertions, financial revisions, and retractions directly against Gold star-schema tables (`fct_arr_observation`, `fct_article`, `dim_company`, `view_company_latest_arr`).
-
----
-
-## 5. Core Business & Metric Calculation Rules
-
+### E. Financial Math & Normalization Rules
 1. **Multi-Currency Normalization to USD**:
    - `EUR` $\times$ 1.09 = USD
    - `GBP` $\times$ 1.28 = USD
    - `JPY` $\times$ 0.0067 = USD
-   - Revenue ranges (e.g., `"$10M - $20M"`) take the arithmetic midpoint (`$15,000,000`).
-2. **Company Size Thresholds**:
+   - Revenue ranges (e.g., `"$10M - $20M"`) resolve to the arithmetic midpoint (`$15,000,000`).
+2. **Company Size Categories**:
    - **Small**: $< 10,000$ employees
    - **Medium**: $10,000$ – $30,000$ employees
    - **Large**: $> 30,000$ employees
+
+---
+
+## 2. Project 2: Slowly Changing Dimensions (SCD Types 1, 2, & 3)
+
+### A. Architectural Purpose
+Showcases the three industry-standard patterns for handling mutable dimensional attributes over time, implemented purely in functional Python without class bloat or external dependencies.
+
+### B. SCD Architecture & Pattern Comparison
+A single source entity (`Customer` tracking loyalty tier upgrades from `Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold` $\rightarrow$ `Platinum`) is materialized across all three SCD patterns:
+
+```
+        +-----------------------------------------------------------+
+        |                 Raw Customer Source Feed                  |
+        |  (Customer Profile + Spend-Triggered Loyalty Progression) |
+        +-----------------------------------------------------------+
+                                      |
+          +---------------------------+---------------------------+
+          |                           |                           |
+          v                           v                           v
++-------------------+       +-------------------+       +-------------------+
+| dim_customer_scd1 |       | dim_customer_scd2 |       | dim_customer_scd3 |
++-------------------+       +-------------------+       +-------------------+
+| PK: customer_id   |       | PK: customer_sk   |       | PK: customer_id   |
+|     loyalty_tier  |       |     customer_id   |       |     curr_loyalty  |
+|     credit_limit  |       |     loyalty_tier  |       |     prev_loyalty  |
+|     last_updated  |       |     effective_from|       |     curr_credit   |
++-------------------+       |     effective_to  |       |     prev_credit   |
+ (In-Place Overwrite)       |     is_current    |       |     change_date   |
+ (Zero History)             +-------------------+       +-------------------+
+                             (Full Audit History)        (Current vs Prior)
+```
+
+### C. SCD Design Matrix
+| Pattern | Table | Surrogate Key | Business Key | History Preserved | Ideal Use Case |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **SCD Type 1** | `dim_customer_scd1` | *None* | `customer_id` | **No** (overwritten) | Typos, phone numbers, contact corrections |
+| **SCD Type 2** | `dim_customer_scd2` | `customer_sk` | `customer_id` | **Full** (new row per change) | Financial audits, regulatory tracking, point-in-time joins |
+| **SCD Type 3** | `dim_customer_scd3` | *None* | `customer_id` | **1 Prior State** (columnar) | Year-over-year sales territory or quota comparisons |
+
+### D. SCD Type 2 Audit Mechanics
+In `dim_customer_scd2`, each status update expires the prior active row and inserts a new active row:
+
+| `customer_sk` | `customer_id` | `loyalty_tier` | `effective_start_date` | `effective_end_date` | `is_current_flag` |
+| :--- | :--- | :--- | :--- | :--- | :---: |
+| `CUST_SK_0007` | `BERGS` | **Silver** | 1996-01-01 | 1997-06-30 | `False` |
+| `CUST_SK_0008` | `BERGS` | **Gold** | 1997-07-01 | 1998-03-31 | `False` |
+| `CUST_SK_0009` | `BERGS` | **Platinum** | 1998-04-01 | **9999-12-31** | **`True`** |
+
+* **Point-in-Time Joins**:
+  ```sql
+  SELECT o.order_id, c.loyalty_tier
+  FROM fct_orders o
+  JOIN dim_customer_scd2 c
+    ON o.customer_id = c.customer_id
+   AND o.order_date BETWEEN c.effective_start_date AND c.effective_end_date;
+  ```
+* **Current Active Snapshot**:
+  ```sql
+  SELECT * FROM dim_customer_scd2 WHERE is_current_flag = TRUE;
+  ```
+
+---
+
+## 3. Project 3: Real-Time Streaming & CDC Reconciliation Engine
+
+### A. Architectural Purpose
+Demonstrates an enterprise **Micro-Batch Streaming Engine** handling unordered arrivals, corrupted payloads, late event watermarks, and atomic **Change Data Capture (CDC)** reconciliation into Gold tables.
+
+### B. Streaming Pipeline Architecture
+```
+[ Stream Landing: data/stream_landing/*.jsonl ]
+  ├─ High-frequency JSON micro-batches
+  └─ Includes op_code: 'I' (Insert), 'U' (Update), 'D' (Delete)
+          │
+          ▼
+[ 1. Payload Schema Gatekeeper ]
+  ├─ Validates presence of mandatory keys (event_id, timestamp, op_code)
+  └─ Invalid format / non-numeric ARR -> Routes to Dead-Letter Queue (DLQ)
+          │
+          ▼
+[ 2. Event-Time Watermarking (48-Hour Cutoff) ]
+  ├─ Evaluates event_timestamp against watermark cutoff
+  └─ Late arrivals (> 48h old) are dropped to preserve state stability
+          │
+          ▼
+[ 3. Atomic MERGE INTO Reconciliation ]
+  ├─ 'I' (Insert): Appends new articles & observations
+  ├─ 'U' (Update): Updates revenue and timestamps in-place
+  └─ 'D' (Delete): Retracts invalidated records from Gold tables
+          │
+          ▼
+[ Target Analytical Warehouse ]
+  └─ Synchronized Gold Tables (dim_company, fct_article, fct_arr_observation)
+```
+
+### C. Resilience Components
+1. **Dead-Letter Queue (`DLQ`)**:
+   - Quarantines malformed payloads directly into `data/dead_letter_queue/`.
+   - Attaches quarantine timestamp, error category, and original payload for re-processing.
+2. **48-Hour Watermarking**:
+   - Maintains real-time state boundaries. Events older than $T_{\text{max}} - 48\text{h}$ are discarded.
+3. **Atomic `MERGE INTO` Logic**:
+   - Ensures exactly-once idempotent updates across concurrent micro-batches.
+
+---
+
+## 4. Project 4: Enterprise Data Contracts & Lineage Governance
+
+### A. Architectural Purpose
+Provides automated **Data Quality Contracts** and an automated **Column-Level Lineage Governance Catalog** to guarantee data reliability and pipeline auditability.
+
+### B. Data Contracts Validation Engine
+Programmatically enforces structural constraints before downstream consumption:
+
+```
+[ Warehouse Deliverables ]
+          │
+          ▼
++-----------------------------------------------------------+
+|               DataContractValidator Engine                |
+|  (data_contracts.py)                                      |
++-----------------------------------------------------------+
+  ├─ PRIMARY_KEY   -> Uniqueness & non-null key check
+  ├─ NOT_NULL      -> Critical business fields cannot be null
+  ├─ CHECK_RANGE   -> Numeric bounds (e.g., arr_usd_M > 0)
+  ├─ ENUM_TAXONOMY -> Strict categorical values (e.g., loyalty_tier)
+  └─ FOREIGN_KEY   -> Zero orphan records across dimensions & facts
+          │
+          ▼
+[ Output: data/data_quality_report.json ] (100% Pass Scorecard)
+```
+
+### C. Automated Data Lineage Catalog
+Extracts end-to-end transformation provenance from source files to analytical models:
+
+```
+[ Source Files ]  ──> [ Transformations ] ──> [ Gold Models ]
+  tech_news.csv          clean_articles()        dim_company
+  company_metadata.json  parse_revenue()         fct_article
+  customers.csv          apply_scd_logic()       fct_arr_observation
+                                                 dim_customer_scd1/2/3
+          │
+          ▼
+[ Output: data/metadata_catalog.json ]
+  ├─ Table-level schemas & record counts
+  ├─ Column-level data types & business descriptions
+  └─ Complete upstream and downstream dependency graph
+```
+
+---
+
+## 5. Master Platform Execution Map
+
+All 4 projects can be executed together via the root orchestrator or independently inside their own directories:
+
+```bash
+# Option 1: Execute all 4 projects sequentially with full streaming & lineage
+python pipeline.py --streaming --lineage
+
+# Option 2: Execute Project 1 standalone (Medallion Star Schema)
+python part1_tech_news_lakehouse/pipeline.py
+
+# Option 3: Launch Project 1 AI Text-to-SQL Assistant
+python part1_tech_news_lakehouse/text_to_sql.py
+
+# Option 4: Execute Project 2 standalone (SCD 1, 2, and 3)
+python part2_slowly_changing_dimensions/scd_pipeline.py
+
+# Option 5: Execute Project 3 standalone (Streaming & CDC)
+python part3_realtime_streaming_cdc/streaming_cdc.py
+
+# Option 6: Execute Project 4 standalone (Contracts & Lineage)
+python part4_data_contracts_lineage/data_contracts.py
+```

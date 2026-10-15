@@ -2,72 +2,54 @@
 
 [![CI](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml/badge.svg)](https://github.com/chanakyachandu/tech-news-arr-warehouse/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
-[![Arch](https://img.shields.io/badge/Architecture-Medallion%20%7C%20SCD%202%20%7C%20Streaming%20CDC-orange.svg)](DATA_ARCHITECTURE.md)
+[![Arch](https://img.shields.io/badge/Architecture-Medallion%20%7C%20SCD%201%2C2%2C3%20%7C%20Streaming%20CDC-orange.svg)](DATA_ARCHITECTURE.md)
 [![Schema](https://img.shields.io/badge/Warehouse-Star%20Schema-green.svg)](DATA_ARCHITECTURE.md)
-[![Tests](https://img.shields.io/badge/Tests-22%20Passing-brightgreen.svg)](tests/)
-[![SQL](https://img.shields.io/badge/Engine-DuckDB-yellow.svg)](notebooks/04_sql_queries.ipynb)
+[![Tests](https://img.shields.io/badge/Tests-28%20Passing-brightgreen.svg)](tests/)
+[![SQL](https://img.shields.io/badge/Engine-DuckDB-yellow.svg)](part1_tech_news_lakehouse/notebooks/04_sql_queries.ipynb)
 
-An enterprise-grade multi-domain data platform implementing **Dual-Mode Batch Medallion Architecture**
-(`Bronze` ──► `Silver` ──► `Gold`), **Slowly Changing Dimensions (SCD Type 2)**, and **Real-Time Streaming CDC Engine** (Event-Time Watermarking,
-Dead-Letter Queue `DLQ`, and atomic `MERGE INTO` reconciliation) across two core enterprise domains:
-1. **Domain A (Tech News & Financial ARR)**: Articles, company entity resolution, ARR observations, and Natural Language to SQL Assistant ("DataTalker AI").
-2. **Domain B (E-Commerce & Omnichannel Retail)**: Relational orders, fulfillment tracking, line-item margins, customer loyalty tier SCD Type 2 history, and Customer 360 RFM segmentation.
+An enterprise-grade data platform structured into **4 distinct, independent projects**:
+1. **Project 1 (Tech News & ARR Lakehouse)**: Medallion batch architecture (`Bronze` $\rightarrow$ `Silver` $\rightarrow$ `Gold`), Star Schema, and Natural Language to SQL Assistant ("DataTalker AI").
+2. **Project 2 (Slowly Changing Dimensions)**: Functional implementations of SCD Type 1, Type 2 (audit history), and Type 3 (previous state).
+3. **Project 3 (Real-Time Streaming & CDC Engine)**: Event-time watermarking (48h cutoff), DLQ error quarantine, and atomic `MERGE INTO` reconciliation.
+4. **Project 4 (Data Contracts & Lineage Governance)**: Automated programmatic contract validation and column-level metadata lineage catalog.
 
 ```mermaid
 flowchart TD
-    subgraph Sources["📥 Multi-Domain Ingestion Sources"]
-        RAW_CSV["Domain A: tech_news.csv (750 Articles)"]
-        RAW_ECOM["Domain B: E-Commerce (Orders, Products, Customers, Items, Categories)"]
-        STREAM_IN["Domain C: Real-Time Stream Landing (stream_landing/)"]
+    subgraph P1["📰 Project 1: Tech News & ARR Lakehouse"]
+        P1_RAW["Raw Articles & Company Metadata"]
+        P1_MED["Medallion: Bronze ➔ Silver ➔ Gold"]
+        P1_STAR["Star Schema: dim_company, fct_article, fct_arr_observation"]
+        P1_AI["Downstream: Vector Semantic Search & DataTalker AI"]
+        P1_RAW --> P1_MED --> P1_STAR --> P1_AI
     end
 
-    subgraph BatchMedallion["⚙️ Medallion Architecture Pipeline"]
-        B["🥉 BRONZE: Raw Ingestion & Schema Profiling"]
-        S["🥈 SILVER: Normalization, Entity Resolution & Financial Margin Math"]
-        G["🥇 GOLD: Star-Schema Dimensional Relational Tables & SCD Type 2"]
-        B --> S --> G
+    subgraph P2["🔄 Project 2: Slowly Changing Dimensions (SCD)"]
+        P2_RAW["Customer Progression Feed"]
+        P2_S1["SCD Type 1: In-Place Overwrite"]
+        P2_S2["SCD Type 2: Historical Versioning (customer_sk)"]
+        P2_S3["SCD Type 3: Prior State (previous_loyalty)"]
+        P2_RAW --> P2_S1
+        P2_RAW --> P2_S2
+        P2_RAW --> P2_S3
     end
 
-    subgraph StreamingCDC["⚡ Real-Time Streaming & CDC Engine"]
-        VAL["Schema Validation & Event Parser"]
-        WM["Event-Time Watermark Filter (Late Dropped)"]
-        DLQ["Dead-Letter Queue (data/dead_letter_queue/)"]
-        MERGE["Atomic MERGE INTO Reconciliation (I / U / D)"]
-        VAL -->|Valid & On-Time| WM --> MERGE
-        VAL -->|Corrupted Payload| DLQ
+    subgraph P3["⚡ Project 3: Real-Time Streaming & CDC"]
+        P3_IN["JSONL Micro-Batches"]
+        P3_VAL["Schema & 48h Watermark Filter"]
+        P3_DLQ["Dead-Letter Queue (DLQ)"]
+        P3_CDC["Atomic MERGE INTO (I / U / D)"]
+        P3_IN --> P3_VAL
+        P3_VAL -->|Corrupted / Late| P3_DLQ
+        P3_VAL -->|Valid & On-Time| P3_CDC
     end
 
-    Sources --> B
-    STREAM_IN --> VAL
-
-    subgraph GoldWarehouse["🏛️ Multi-Domain Star Schema Warehouse (DuckDB)"]
-        subgraph DomainA_Gold["📰 Domain A: Tech News & Financials"]
-            DIM_COMP["dim_company (26 Entities)"]
-            FCT_ART["fct_article (750 Articles)"]
-            FCT_ARR["fct_arr_observation (558 Observations)"]
-            AGG_QTR["agg_company_quarterly_arr (315 Rollups)"]
-            VIEW_ARR["view_company_latest_arr (Latest Snapshots)"]
-        end
-        subgraph DomainB_Gold["🛍️ Domain B: E-Commerce & Retail"]
-            DIM_CUST_SCD2["dim_customer_scd2 (SCD Type 2 History)"]
-            DIM_PROD["dim_product (77 SKUs & Categories)"]
-            DIM_DATE["dim_date (732 Calendar Days)"]
-            FCT_ORD["fct_orders (830 Orders)"]
-            FCT_ITEM["fct_order_items (2,155 Items)"]
-            AGG_RFM["agg_customer_rfm (Customer 360 RFM Segments)"]
-        end
+    subgraph P4["🛡️ Project 4: Data Contracts & Lineage Governance"]
+        P4_RUN["Automated Quality Validator"]
+        P4_REP["data_quality_report.json (100% Pass)"]
+        P4_CAT["metadata_catalog.json (Column-Level Provenance)"]
+        P4_RUN --> P4_REP
+        P4_RUN --> P4_CAT
     end
-
-    G --> GoldWarehouse
-    MERGE --> DomainA_Gold
-
-    subgraph DownstreamApps["🤖 Downstream AI & Analytical Applications"]
-        VEC["🧠 Semantic Search (Cosine Similarity + 384d Vectors)"]
-        TALKER["💬 DataTalker AI: Multi-Domain Text-to-SQL + AST Guardrails"]
-    end
-
-    GoldWarehouse --> VEC
-    GoldWarehouse --> TALKER
 ```
 
 ---
@@ -123,20 +105,17 @@ tech-news-arr-warehouse/
         ├── dim_company.csv            # Company dimension (N = 26)
         ├── fct_article.csv            # Article fact table (N = 750)
         ├── fct_arr_observation.csv    # ARR observations (N = 558)
-        └── ecommerce/                 # 🛍️ E-Commerce Star Schema & SCD 2 Tables
-            ├── dim_customer_scd2.csv  # Customer SCD Type 2 history (N = 175)
-            ├── dim_product.csv        # Product dimension (N = 77)
-            ├── dim_date.csv           # Date hierarchy (N = 732)
-            ├── fct_orders.csv         # Order transactional facts (N = 830)
-            ├── fct_order_items.csv    # Line-item facts (N = 2,155)
-            └── agg_customer_rfm.csv   # Customer 360 RFM segmentation (N = 89)
+        └── ecommerce/                 # 🛍️ Project 2 SCD Dimension Tables
+            ├── dim_customer_scd1.csv  # SCD Type 1 in-place overwrite (N = 91)
+            ├── dim_customer_scd2.csv  # SCD Type 2 full history with surrogate keys (N = 175)
+            └── dim_customer_scd3.csv  # SCD Type 3 previous-tier tracking (N = 91)
 ```
 
 ---
 
 ## 🌊 End-to-End Pipeline Flow & Data Lifecycle
 
-The platform processes data across three distinct domains using a multi-stage Medallion architecture:
+The platform executes across **4 distinct, specialized data engineering projects**:
 
 | Project Domain | Directory & Code | Input Sources | Primary Responsibilities |
 | :--- | :--- | :--- | :--- |
@@ -290,24 +269,24 @@ Real-world data pipelines must be resilient to unexpected schema mutations and p
 
 ## 🛡️ 5. Defensive Engineering & Data Quality Metrics
 
-* **Zero-Orphan Foreign Keys**: Enforced referential integrity between fact tables (`fct_orders`, `fct_arr_observation`) and dimension tables.
-* **SCD Type 2 Audit Trail**: Historical tracking of customer loyalty tiers and company statuses with `is_current`, `valid_from`, and `valid_to` timestamps.
+* **Zero-Orphan Foreign Keys**: Enforced referential integrity between fact tables (`fct_article`, `fct_arr_observation`) and `dim_company`.
+* **SCD Type 2 Audit Trail**: Historical tracking of customer loyalty tiers with `customer_sk`, `is_current_flag`, `effective_start_date`, and `effective_end_date` timestamps.
 * **In-Memory Analytical Speed**: Leveraging DuckDB column-oriented execution for sub-second analytical aggregations and window functions.
 
 ---
 
 ## 📋 6. Resume-Ready Portfolio Highlights
 
-> - **Multi-Domain Medallion Lakehouse**: Architected a 3-tier lakehouse platform (Bronze/Silver/Gold) processing unstructured tech news and retail telemetry into optimized star schema dimensional models in DuckDB.
-> - **Real-Time CDC & DLQ Engine**: Built an event-driven CDC streaming engine featuring event-time watermarking, atomic `MERGE INTO` deduplication, and a Dead-Letter Queue (DLQ) for resilient error recovery.
+> - **Multi-Project Data Engineering Platform**: Architected 4 decoupled, production-grade projects demonstrating Medallion Lakehouse ETL, Star Schema modeling, SCD 1/2/3, Streaming CDC, and Data Governance Contracts.
+> - **Real-Time CDC & DLQ Engine**: Built an event-driven CDC streaming engine featuring 48h event-time watermarking, atomic `MERGE INTO` deduplication, and a Dead-Letter Queue (DLQ) for resilient error recovery.
 > - **AI-Powered Analytics & Guardrails**: Integrated Google Gemini API for an AI Text-to-SQL copilot with AST-based SQL safety validation, self-correcting error loops, and executive brief synthesis.
-> - **Robust Testing & CI/CD**: Authored comprehensive `pytest` test suites with GitHub Actions CI workflows validating 100% referential integrity and schema invariants.
+> - **Robust Testing & CI/CD**: Authored comprehensive `pytest` test suite (28 automated tests) with GitHub Actions CI workflows validating 100% referential integrity and schema invariants.
 
 ---
 
 ## 🏛️ 7. Data Architecture & Documentation
 
 For full architectural designs, dimensional star schema specifications, surrogate key rationale, and cloud scaling patterns:
-* See **[DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md)** for warehouse modeling & governance.
+* See **[DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md)** for warehouse modeling & governance across all 4 projects.
 * See **[Task.txt](Task.txt)** for original requirements and specifications.
-* See **[05_ai_text_to_sql.ipynb](notebooks/05_ai_text_to_sql.ipynb)** for interactive AI demo.
+* See **[05_ai_text_to_sql.ipynb](part1_tech_news_lakehouse/notebooks/05_ai_text_to_sql.ipynb)** for interactive AI demo.
