@@ -1,0 +1,4 @@
+event_id,event_timestamp,op_code,article_id,company_name,title,category,author,published_date,arr_usd_M,summary,url
+EVT_2026_001,2026-10-25T06:28:06.279149+00:00,I,ART0004,Confluent,Confluent Reports Record Revenue Growth,Artificial Intelligence,Sam Wilson,2023-12-13,980.0,Investors show strong confidence in the company's growth trajectory and market position.,https://technews.example.com/articles/4
+EVT_2026_002,2026-10-25T06:33:06.279149+00:00,I,ART0006,NVIDIA,NVIDIA Achieves Profitability Milestone,FinTech,,2021-10-26,16800.0,Financial results exceed analyst expectations across all key metrics.,https://technews.example.com/articles/6
+EVT_2026_003,2026-10-25T06:38:06.279149+00:00,I,ART0009,MongoDB,MongoDB Expands into European Market,AI & ML,Jane Doe,2023-02-07,1480.0,Leadership outlines vision for responsible AI development and deployment.,https://technews.example.com/articles/9

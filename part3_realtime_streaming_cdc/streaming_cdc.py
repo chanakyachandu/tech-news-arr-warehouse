@@ -44,66 +44,79 @@ class CDCStreamProcessor:
 
     def generate_sample_stream_batches(self) -> List[str]:
         """
-        Generates realistic micro-batch JSONL event files:
+        Generates realistic micro-batch CSV & JSONL event files sourced directly from raw tech_news.csv:
         - Batch 1: Real-time breaking tech news & ARR observations (Inserts: op='I')
         - Batch 2: Revisions, corrections & deletions (Updates: op='U', Deletes: op='D')
         - Batch 3: Edge cases (Late-arriving events outside watermark window, and malformed records for DLQ)
+        - stream_events.csv: Unified landing CSV file representing the continuous stream.
         """
         now = datetime.now(timezone.utc)
         created_files = []
 
+        # Attempt to load seed records from raw tech_news.csv if available
+        raw_csv_path = os.path.join(self.project_root, "data", "raw", "tech_news.csv")
+        seed_records = {}
+        if os.path.exists(raw_csv_path):
+            try:
+                df_raw = pd.read_csv(raw_csv_path)
+                for comp in ["Confluent", "NVIDIA", "MongoDB", "Databricks", "OpenAI", "Snowflake"]:
+                    matching = df_raw[df_raw["company_name"] == comp]
+                    if not matching.empty:
+                        seed_records[comp] = matching.iloc[0].to_dict()
+            except Exception:
+                pass
+
         # ---------------------------------------------------------------------------------
-        # Batch 1: Real-time Ingestion (Valid Inserts)
+        # Batch 1: Real-time Ingestion (Valid Inserts from tech_news.csv)
         # ---------------------------------------------------------------------------------
+        b1_rec1 = seed_records.get("Confluent", {})
+        b1_rec2 = seed_records.get("NVIDIA", {})
+        b1_rec3 = seed_records.get("MongoDB", {})
+
         batch1_events = [
             {
                 "event_id": "EVT_2026_001",
                 "event_timestamp": (now - timedelta(minutes=15)).isoformat(),
                 "op_code": "I",
-                "article_id": "ART_STRM_001",
-                "company_name": "Databricks",
-                "title": "Databricks Surpasses $3.2B ARR with AI Lakehouse Surge",
-                "category": "Artificial Intelligence",
-                "author": "TechWire News",
-                "published_date": "2026-09-15",
-                "arr_usd_M": 3200,
-                "summary": "Databricks reported crossing $3.2B in annual recurring revenue fueled by enterprise AI products.",
-                "url": "https://technews.io/articles/databricks-crosses-3200m-arr"
+                "article_id": b1_rec1.get("article_id", "ART0004"),
+                "company_name": "Confluent",
+                "title": b1_rec1.get("title", "Confluent Reports Record Revenue Growth"),
+                "category": b1_rec1.get("category", "Artificial Intelligence"),
+                "author": b1_rec1.get("author", "Sam Wilson"),
+                "published_date": "2023-12-13",
+                "arr_usd_M": 980.0,
+                "summary": b1_rec1.get("summary", "Confluent reports strong revenue growth across cloud data streaming infrastructure."),
+                "url": b1_rec1.get("url", "https://technews.io/articles/confluent-980m-arr")
             },
             {
                 "event_id": "EVT_2026_002",
                 "event_timestamp": (now - timedelta(minutes=10)).isoformat(),
                 "op_code": "I",
-                "article_id": "ART_STRM_002",
-                "company_name": "Snowflake",
-                "title": "Snowflake Accelerates Data Cloud Expansion Reaching $3.8B ARR",
-                "category": "Cloud Computing",
-                "author": "Cloud Insights",
-                "published_date": "2026-09-18",
-                "arr_usd_M": 3800,
-                "summary": "Snowflake announced accelerated enterprise adoption reaching $3.8B in annualized revenue run-rate.",
-                "url": "https://technews.io/articles/snowflake-growth-3800m-arr"
+                "article_id": b1_rec2.get("article_id", "ART0006"),
+                "company_name": "NVIDIA",
+                "title": b1_rec2.get("title", "NVIDIA Achieves Profitability Milestone"),
+                "category": b1_rec2.get("category", "FinTech"),
+                "author": b1_rec2.get("author", "TechWire"),
+                "published_date": "2021-10-26",
+                "arr_usd_M": 16800.0,
+                "summary": b1_rec2.get("summary", "Financial results exceed analyst expectations across all enterprise AI metrics."),
+                "url": b1_rec2.get("url", "https://technews.io/articles/nvidia-profitability")
             },
             {
                 "event_id": "EVT_2026_003",
                 "event_timestamp": (now - timedelta(minutes=5)).isoformat(),
                 "op_code": "I",
-                "article_id": "ART_STRM_003",
-                "company_name": "OpenAI",
-                "title": "OpenAI Enterprise Subscriptions Hit Record $4.5B ARR Benchmark",
-                "category": "Artificial Intelligence",
-                "author": "AI Times",
-                "published_date": "2026-09-20",
-                "arr_usd_M": 4500,
-                "summary": "OpenAI annualized revenue crossed $4.5B with surging API and enterprise ChatGPT workspace volume.",
-                "url": "https://technews.io/articles/openai-reaches-4500m-arr"
+                "article_id": b1_rec3.get("article_id", "ART0009"),
+                "company_name": "MongoDB",
+                "title": b1_rec3.get("title", "MongoDB Expands into European Market"),
+                "category": b1_rec3.get("category", "AI & ML"),
+                "author": b1_rec3.get("author", "Jane Doe"),
+                "published_date": "2023-02-07",
+                "arr_usd_M": 1480.0,
+                "summary": b1_rec3.get("summary", "MongoDB Atlas adoption accelerates cloud database run-rate past $1.48B."),
+                "url": b1_rec3.get("url", "https://technews.io/articles/mongodb-expansion")
             }
         ]
-        b1_path = os.path.join(self.stream_dir, "batch_01_inserts.jsonl")
-        with open(b1_path, "w", encoding="utf-8") as f:
-            for ev in batch1_events:
-                f.write(json.dumps(ev) + "\n")
-        created_files.append(b1_path)
 
         # ---------------------------------------------------------------------------------
         # Batch 2: CDC Updates & Deletions
@@ -112,37 +125,32 @@ class CDCStreamProcessor:
             {
                 "event_id": "EVT_2026_004",
                 "event_timestamp": (now - timedelta(minutes=3)).isoformat(),
-                "op_code": "U",  # Update existing record
-                "article_id": "ART_STRM_001",
-                "company_name": "Databricks",
-                "title": "Databricks Officially Confirms $3.35B ARR Following Q3 Audit",
+                "op_code": "U",  # Update: Upward revision
+                "article_id": b1_rec1.get("article_id", "ART0004"),
+                "company_name": "Confluent",
+                "title": "Confluent Officially Revises Q4 ARR Upward to $1.05B",
                 "category": "Artificial Intelligence",
-                "author": "TechWire News",
-                "published_date": "2026-09-15",
-                "arr_usd_M": 3350,  # Revised upward
-                "summary": "Audited financial review revised Databricks annual recurring revenue figure upward to $3.35B.",
-                "url": "https://technews.io/articles/databricks-crosses-3200m-arr"
+                "author": "Sam Wilson",
+                "published_date": "2023-12-13",
+                "arr_usd_M": 1050.0,
+                "summary": "Audited year-end financial review revised Confluent annual recurring revenue to $1,050M.",
+                "url": "https://technews.io/articles/confluent-revised-arr"
             },
             {
                 "event_id": "EVT_2026_005",
                 "event_timestamp": (now - timedelta(minutes=1)).isoformat(),
                 "op_code": "D",  # Deletion / Retraction
-                "article_id": "ART_STRM_002",
-                "company_name": "Snowflake",
-                "title": "Snowflake Accelerates Data Cloud Expansion Reaching $3.8B ARR",
-                "category": "Cloud Computing",
-                "author": "Cloud Insights",
-                "published_date": "2026-09-18",
-                "arr_usd_M": 3800,
+                "article_id": b1_rec2.get("article_id", "ART0006"),
+                "company_name": "NVIDIA",
+                "title": b1_rec2.get("title", "NVIDIA Achieves Profitability Milestone"),
+                "category": "FinTech",
+                "author": "TechWire",
+                "published_date": "2021-10-26",
+                "arr_usd_M": 16800.0,
                 "summary": "Article retracted due to unconfirmed analyst estimates.",
-                "url": "https://technews.io/articles/snowflake-growth-3800m-arr"
+                "url": "https://technews.io/articles/nvidia-profitability"
             }
         ]
-        b2_path = os.path.join(self.stream_dir, "batch_02_cdc_updates.jsonl")
-        with open(b2_path, "w", encoding="utf-8") as f:
-            for ev in batch2_events:
-                f.write(json.dumps(ev) + "\n")
-        created_files.append(b2_path)
 
         # ---------------------------------------------------------------------------------
         # Batch 3: Edge Cases (Late-Arriving Watermark Violation + Malformed DLQ Records)
@@ -150,16 +158,15 @@ class CDCStreamProcessor:
         batch3_events = [
             {
                 "event_id": "EVT_2026_006",
-                # 120 hours old (> 48h default watermark window)
-                "event_timestamp": (now - timedelta(hours=120)).isoformat(),
+                "event_timestamp": (now - timedelta(hours=120)).isoformat(),  # 120h old (> 48h watermark)
                 "op_code": "I",
                 "article_id": "ART_LATE_999",
-                "company_name": "OpenAI",
-                "title": "Extremely Late Event: OpenAI Seed Revenue History",
-                "category": "Artificial Intelligence",
+                "company_name": "MongoDB",
+                "title": "Extremely Late Historical Entry: MongoDB Seed Record",
+                "category": "AI & ML",
                 "author": "Legacy Feed",
-                "published_date": "2026-01-01",
-                "arr_usd_M": 500,
+                "published_date": "2020-01-01",
+                "arr_usd_M": 500.0,
                 "summary": "Late historical event emitted beyond the stream watermark boundary.",
                 "url": "https://technews.io/articles/late-event"
             },
@@ -167,17 +174,33 @@ class CDCStreamProcessor:
                 "event_id": "EVT_2026_007",
                 "event_timestamp": now.isoformat(),
                 "op_code": "I",
-                # Corrupt record: missing mandatory article_id and company_name
+                "article_id": "",  # Corrupt: missing mandatory article_id
+                "company_name": "",  # Corrupt: missing company_name
                 "title": "Corrupt Payload Without Identification",
                 "category": "Unknown",
-                "arr_usd_M": "INVALID_NUMBER_STRING"
+                "author": "",
+                "published_date": "2026-10-25",
+                "arr_usd_M": "INVALID_NUMBER_STRING",  # Corrupt: non-numeric ARR
+                "summary": "Malformed payload heading to Dead-Letter Queue.",
+                "url": ""
             }
         ]
-        b3_path = os.path.join(self.stream_dir, "batch_03_edge_cases.jsonl")
-        with open(b3_path, "w", encoding="utf-8") as f:
-            for ev in batch3_events:
-                f.write(json.dumps(ev) + "\n")
-        created_files.append(b3_path)
+
+        batches = [
+            ("batch_01_inserts", batch1_events),
+            ("batch_02_cdc_updates", batch2_events),
+            ("batch_03_edge_cases", batch3_events)
+        ]
+
+        for base_name, ev_list in batches:
+            csv_path = os.path.join(self.stream_dir, f"{base_name}.csv")
+            pd.DataFrame(ev_list).to_csv(csv_path, index=False)
+            created_files.append(csv_path)
+
+        # Also write the unified continuous landing CSV: stream_events.csv
+        all_events = batch1_events + batch2_events + batch3_events
+        unified_csv = os.path.join(self.stream_dir, "stream_events.csv")
+        pd.DataFrame(all_events).to_csv(unified_csv, index=False)
 
         return created_files
 
@@ -251,13 +274,18 @@ class CDCStreamProcessor:
             "execution_duration_sec": 0.0
         }
 
-        # Read batch JSONL lines
+        # Read batch events from CSV or JSONL
         events_raw = []
         if os.path.exists(batch_source):
-            with open(batch_source, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.strip():
-                        events_raw.append(json.loads(line))
+            if batch_source.endswith(".csv"):
+                df_batch = pd.read_csv(batch_source, keep_default_na=False)
+                # Convert records to dictionary, treating empty strings as empty
+                events_raw = df_batch.to_dict(orient="records")
+            else:
+                with open(batch_source, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():
+                            events_raw.append(json.loads(line))
         metrics["total_records_ingested"] = len(events_raw)
 
         # Load existing warehouse state
@@ -288,6 +316,8 @@ class CDCStreamProcessor:
 
             # 2. Event-Time Watermark Check
             ev_ts = datetime.fromisoformat(str(event["event_timestamp"]).replace("Z", "+00:00"))
+            if ev_ts.tzinfo is None:
+                ev_ts = ev_ts.replace(tzinfo=timezone.utc)
             if ev_ts < watermark_boundary:
                 # Late-arriving event past watermark window
                 metrics["watermark_dropped_late"] += 1
@@ -419,6 +449,68 @@ class CDCStreamProcessor:
 
         metrics["execution_duration_sec"] = round(time.time() - start_time, 4)
         return metrics
+
+    def sync_stream(
+        self,
+        source_file: Optional[str] = None,
+        destination_file: Optional[str] = None,
+        watermark_hours: float = 48.0
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, Any]]:
+        """
+        Reads from 1 single Source file (stream_source.csv) and reconciles into
+        1 single Destination file (stream_destination.csv) located in the same folder.
+        Returns: (df_before, df_after, metrics)
+        """
+        src = source_file or os.path.join(self.stream_dir, "stream_source.csv")
+        dst = destination_file or os.path.join(self.stream_dir, "stream_destination.csv")
+
+        # Load existing destination state (BEFORE)
+        if os.path.exists(dst) and os.path.getsize(dst) > 0:
+            df_before = pd.read_csv(dst)
+        else:
+            df_before = pd.DataFrame(columns=["article_id", "company_name", "arr_usd_M", "title", "last_event_id", "last_updated_at"])
+
+        # Also process into warehouse so star schema stays synced
+        metrics = self.process_stream_batch(src, watermark_hours=watermark_hours)
+
+        # Build clean destination table from source events
+        records = {}
+        if os.path.exists(src):
+            df_src = pd.read_csv(src, keep_default_na=False)
+            now_utc = datetime.now(timezone.utc)
+            watermark_boundary = now_utc - timedelta(hours=watermark_hours)
+
+            for _, row in df_src.iterrows():
+                is_valid, ev, err = self.validate_and_parse_event(row.to_dict())
+                if not is_valid:
+                    continue
+
+                ev_ts = datetime.fromisoformat(str(ev["event_timestamp"]).replace("Z", "+00:00"))
+                if ev_ts.tzinfo is None:
+                    ev_ts = ev_ts.replace(tzinfo=timezone.utc)
+                if ev_ts < watermark_boundary:
+                    continue
+
+                op = str(ev["op_code"]).upper()
+                art_id = str(ev["article_id"]).strip()
+
+                if op == "D":
+                    if art_id in records:
+                        del records[art_id]
+                elif op in ["I", "U"]:
+                    records[art_id] = {
+                        "article_id": art_id,
+                        "company_name": ev.get("company_name", ""),
+                        "arr_usd_M": float(ev.get("arr_usd_M", 0.0)) if ev.get("arr_usd_M") not in [None, ""] else 0.0,
+                        "title": ev.get("title", ""),
+                        "last_event_id": ev.get("event_id", ""),
+                        "last_updated_at": ev.get("event_timestamp", "")
+                    }
+
+        df_after = pd.DataFrame(list(records.values())) if records else pd.DataFrame(columns=["article_id", "company_name", "arr_usd_M", "title", "last_event_id", "last_updated_at"])
+        df_after.to_csv(dst, index=False)
+
+        return df_before, df_after, metrics
 
 
 def run_streaming_pipeline() -> List[Dict[str, Any]]:

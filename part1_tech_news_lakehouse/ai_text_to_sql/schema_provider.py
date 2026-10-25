@@ -34,19 +34,23 @@ FOREIGN_KEYS = {
 }
 
 
+from pathlib import Path
+
+
 def get_default_warehouse_dir() -> str:
     """Resolves the absolute path to the warehouse directory."""
-    current_dir = os.path.abspath(os.path.dirname(__file__))
-    candidates = [
-        os.path.abspath(os.path.join(current_dir, "..", "data", "warehouse")),
-        os.path.abspath(os.path.join(current_dir, "data", "warehouse")),
-        os.path.abspath(r"Fabric\tech-news-arr-warehouse\data\warehouse"),
-        os.path.abspath(r"Fabric\yippi\data\warehouse"),
-    ]
-    for path in candidates:
-        if os.path.exists(path) and os.path.exists(os.path.join(path, "dim_company.csv")):
-            return path
-    raise FileNotFoundError(f"Could not locate warehouse directory in candidates: {candidates}")
+    current = Path(__file__).resolve().parent
+    for p in [current] + list(current.parents):
+        candidate = p / "data" / "warehouse"
+        if candidate.is_dir() and (candidate / "dim_company.csv").is_file():
+            return str(candidate)
+
+    # Fallback to relative candidates
+    for rel in ["data/warehouse", "../data/warehouse", "../../data/warehouse"]:
+        if os.path.exists(rel) and os.path.exists(os.path.join(rel, "dim_company.csv")):
+            return os.path.abspath(rel)
+
+    raise FileNotFoundError("Could not locate warehouse directory containing dim_company.csv")
 
 
 def init_duckdb_warehouse(data_dir: Optional[str] = None) -> duckdb.DuckDBPyConnection:

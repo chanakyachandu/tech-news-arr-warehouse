@@ -1,7 +1,7 @@
 {
   "catalog_metadata": {
     "platform": "Multi-Domain Enterprise Lakehouse",
-    "generated_at": "2026-10-15T18:46:06.076971",
+    "generated_at": "2026-10-25T17:23:11.308202",
     "governance_standard": "Medallion (Bronze/Silver/Gold) + Kimball Dimensional",
     "domains": [
       "Tech News & ARR Lakehouse",
@@ -531,6 +531,85 @@
         }
       ]
     },
+    "ecommerce.dim_customer_scd0": {
+      "domain": "Domain B",
+      "row_count": 91,
+      "column_count": 6,
+      "columns": [
+        {
+          "column_name": "customer_id",
+          "data_type": "str",
+          "nullable": false,
+          "null_count": 0,
+          "distinct_count": 91,
+          "sample_values": [
+            "ALFKI",
+            "ANATR",
+            "ANTON"
+          ]
+        },
+        {
+          "column_name": "company_name",
+          "data_type": "str",
+          "nullable": false,
+          "null_count": 0,
+          "distinct_count": 91,
+          "sample_values": [
+            "Alfreds Futterkiste",
+            "Ana Trujillo Emparedados y helados",
+            "Antonio Moreno Taquer\u00eda"
+          ]
+        },
+        {
+          "column_name": "contact_name",
+          "data_type": "str",
+          "nullable": false,
+          "null_count": 0,
+          "distinct_count": 91,
+          "sample_values": [
+            "Maria Anders",
+            "Ana Trujillo",
+            "Antonio Moreno"
+          ]
+        },
+        {
+          "column_name": "original_country",
+          "data_type": "str",
+          "nullable": false,
+          "null_count": 0,
+          "distinct_count": 21,
+          "sample_values": [
+            "Germany",
+            "Mexico",
+            "Mexico"
+          ]
+        },
+        {
+          "column_name": "original_signup_date",
+          "data_type": "datetime64[us]",
+          "nullable": false,
+          "null_count": 0,
+          "distinct_count": 1,
+          "sample_values": [
+            "1996-01-01 00:00:00",
+            "1996-01-01 00:00:00",
+            "1996-01-01 00:00:00"
+          ]
+        },
+        {
+          "column_name": "initial_credit_limit_usd",
+          "data_type": "int32",
+          "nullable": false,
+          "null_count": 0,
+          "distinct_count": 1,
+          "sample_values": [
+            "5000",
+            "5000",
+            "5000"
+          ]
+        }
+      ]
+    },
     "ecommerce.dim_customer_scd1": {
       "domain": "Domain B",
       "row_count": 91,
@@ -610,7 +689,7 @@
         },
         {
           "column_name": "credit_limit_usd",
-          "data_type": "int64",
+          "data_type": "int32",
           "nullable": false,
           "null_count": 0,
           "distinct_count": 3,
@@ -725,7 +804,7 @@
         },
         {
           "column_name": "credit_limit_usd",
-          "data_type": "int64",
+          "data_type": "int32",
           "nullable": false,
           "null_count": 0,
           "distinct_count": 5,
@@ -864,7 +943,7 @@
         },
         {
           "column_name": "current_credit_limit_usd",
-          "data_type": "int64",
+          "data_type": "int32",
           "nullable": false,
           "null_count": 0,
           "distinct_count": 3,
@@ -876,14 +955,14 @@
         },
         {
           "column_name": "previous_credit_limit_usd",
-          "data_type": "float64",
+          "data_type": "Int32",
           "nullable": true,
           "null_count": 36,
           "distinct_count": 2,
           "sample_values": [
-            "5000.0",
-            "5000.0",
-            "25000.0"
+            "5000",
+            "5000",
+            "25000"
           ]
         },
         {

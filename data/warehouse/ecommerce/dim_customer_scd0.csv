@@ -1,0 +1,92 @@
+customer_id,company_name,contact_name,original_country,original_signup_date,initial_credit_limit_usd
+ALFKI,Alfreds Futterkiste,Maria Anders,Germany,1996-01-01,5000
+ANATR,Ana Trujillo Emparedados y helados,Ana Trujillo,Mexico,1996-01-01,5000
+ANTON,Antonio Moreno Taquería,Antonio Moreno,Mexico,1996-01-01,5000
+AROUT,Around the Horn,Thomas Hardy,UK,1996-01-01,5000
+BERGS,Berglunds snabbköp,Christina Berglund,Sweden,1996-01-01,5000
+BLAUS,Blauer See Delikatessen,Hanna Moos,Germany,1996-01-01,5000
+BLONP,Blondesddsl père et fils,Frédérique Citeaux,France,1996-01-01,5000
+BOLID,Bólido Comidas preparadas,Martín Sommer,Spain,1996-01-01,5000
+BONAP,Bon app',Laurence Lebihan,France,1996-01-01,5000
+BOTTM,Bottom-Dollar Markets,Elizabeth Lincoln,Canada,1996-01-01,5000
+BSBEV,B's Beverages,Victoria Ashworth,UK,1996-01-01,5000
+CACTU,Cactus Comidas para llevar,Patricio Simpson,Argentina,1996-01-01,5000
+CENTC,Centro comercial Moctezuma,Francisco Chang,Mexico,1996-01-01,5000
+CHOPS,Chop-suey Chinese,Yang Wang,Switzerland,1996-01-01,5000
+COMMI,Comércio Mineiro,Pedro Afonso,Brazil,1996-01-01,5000
+CONSH,Consolidated Holdings,Elizabeth Brown,UK,1996-01-01,5000
+DRACD,Drachenblut Delikatessen,Sven Ottlieb,Germany,1996-01-01,5000
+DUMON,Du monde entier,Janine Labrune,France,1996-01-01,5000
+EASTC,Eastern Connection,Ann Devon,UK,1996-01-01,5000
+ERNSH,Ernst Handel,Roland Mendel,Austria,1996-01-01,5000
+FAMIA,Familia Arquibaldo,Aria Cruz,Brazil,1996-01-01,5000
+FISSA,FISSA Fabrica Inter. Salchichas S.A.,Diego Roel,Spain,1996-01-01,5000
+FOLIG,Folies gourmandes,Martine Rancé,France,1996-01-01,5000
+FOLKO,Folk och fä HB,Maria Larsson,Sweden,1996-01-01,5000
+FRANK,Frankenversand,Peter Franken,Germany,1996-01-01,5000
+FRANR,France restauration,Carine Schmitt,France,1996-01-01,5000
+FRANS,Franchi S.p.A.,Paolo Accorti,Italy,1996-01-01,5000
+FURIB,Furia Bacalhau e Frutos do Mar,Lino Rodriguez,Portugal,1996-01-01,5000
+GALED,Galería del gastrónomo,Eduardo Saavedra,Spain,1996-01-01,5000
+GODOS,Godos Cocina Típica,José Pedro Freyre,Spain,1996-01-01,5000
+GOURL,Gourmet Lanchonetes,André Fonseca,Brazil,1996-01-01,5000
+GREAL,Great Lakes Food Market,Howard Snyder,USA,1996-01-01,5000
+GROSR,GROSELLA-Restaurante,Manuel Pereira,Venezuela,1996-01-01,5000
+HANAR,Hanari Carnes,Mario Pontes,Brazil,1996-01-01,5000
+HILAA,HILARION-Abastos,Carlos Hernández,Venezuela,1996-01-01,5000
+HUNGC,Hungry Coyote Import Store,Yoshi Latimer,USA,1996-01-01,5000
+HUNGO,Hungry Owl All-Night Grocers,Patricia McKenna,Ireland,1996-01-01,5000
+ISLAT,Island Trading,Helen Bennett,UK,1996-01-01,5000
+KOENE,Königlich Essen,Philip Cramer,Germany,1996-01-01,5000
+LACOR,La corne d'abondance,Daniel Tonini,France,1996-01-01,5000
+LAMAI,La maison d'Asie,Annette Roulet,France,1996-01-01,5000
+LAUGB,Laughing Bacchus Wine Cellars,Yoshi Tannamuri,Canada,1996-01-01,5000
+LAZYK,Lazy K Kountry Store,John Steel,USA,1996-01-01,5000
+LEHMS,Lehmanns Marktstand,Renate Messner,Germany,1996-01-01,5000
+LETSS,Let's Stop N Shop,Jaime Yorres,USA,1996-01-01,5000
+LILAS,LILA-Supermercado,Carlos González,Venezuela,1996-01-01,5000
+LINOD,LINO-Delicateses,Felipe Izquierdo,Venezuela,1996-01-01,5000
+LONEP,Lonesome Pine Restaurant,Fran Wilson,USA,1996-01-01,5000
+MAGAA,Magazzini Alimentari Riuniti,Giovanni Rovelli,Italy,1996-01-01,5000
+MAISD,Maison Dewey,Catherine Dewey,Belgium,1996-01-01,5000
+MEREP,Mère Paillarde,Jean Fresnière,Canada,1996-01-01,5000
+MORGK,Morgenstern Gesundkost,Alexander Feuer,Germany,1996-01-01,5000
+NORTS,North/South,Simon Crowther,UK,1996-01-01,5000
+OCEAN,Océano Atlántico Ltda.,Yvonne Moncada,Argentina,1996-01-01,5000
+OLDWO,Old World Delicatessen,Rene Phillips,USA,1996-01-01,5000
+OTTIK,Ottilies Käseladen,Henriette Pfalzheim,Germany,1996-01-01,5000
+PARIS,Paris spécialités,Marie Bertrand,France,1996-01-01,5000
+PERIC,Pericles Comidas clásicas,Guillermo Fernández,Mexico,1996-01-01,5000
+PICCO,Piccolo und mehr,Georg Pipps,Austria,1996-01-01,5000
+PRINI,Princesa Isabel Vinhos,Isabel de Castro,Portugal,1996-01-01,5000
+QUEDE,Que Delícia,Bernardo Batista,Brazil,1996-01-01,5000
+QUEEN,Queen Cozinha,Lúcia Carvalho,Brazil,1996-01-01,5000
+QUICK,QUICK-Stop,Horst Kloss,Germany,1996-01-01,5000
+RANCH,Rancho grande,Sergio Gutiérrez,Argentina,1996-01-01,5000
+RATTC,Rattlesnake Canyon Grocery,Paula Wilson,USA,1996-01-01,5000
+REGGC,Reggiani Caseifici,Maurizio Moroni,Italy,1996-01-01,5000
+RICAR,Ricardo Adocicados,Janete Limeira,Brazil,1996-01-01,5000
+RICSU,Richter Supermarkt,Michael Holz,Switzerland,1996-01-01,5000
+ROMEY,Romero y tomillo,Alejandra Camino,Spain,1996-01-01,5000
+SANTG,Santé Gourmet,Jonas Bergulfsen,Norway,1996-01-01,5000
+SAVEA,Save-a-lot Markets,Jose Pavarotti,USA,1996-01-01,5000
+SEVES,Seven Seas Imports,Hari Kumar,UK,1996-01-01,5000
+SIMOB,Simons bistro,Jytte Petersen,Denmark,1996-01-01,5000
+SPECD,Spécialités du monde,Dominique Perrier,France,1996-01-01,5000
+SPLIR,Split Rail Beer & Ale,Art Braunschweiger,USA,1996-01-01,5000
+SUPRD,Suprêmes délices,Pascale Cartrain,Belgium,1996-01-01,5000
+THEBI,The Big Cheese,Liz Nixon,USA,1996-01-01,5000
+THECR,The Cracker Box,Liu Wong,USA,1996-01-01,5000
+TOMSP,Toms Spezialitäten,Karin Josephs,Germany,1996-01-01,5000
+TORTU,Tortuga Restaurante,Miguel Angel Paolino,Mexico,1996-01-01,5000
+TRADH,Tradição Hipermercados,Anabela Domingues,Brazil,1996-01-01,5000
+TRAIH,Trail's Head Gourmet Provisioners,Helvetius Nagy,USA,1996-01-01,5000
+VAFFE,Vaffeljernet,Palle Ibsen,Denmark,1996-01-01,5000
+VICTE,Victuailles en stock,Mary Saveley,France,1996-01-01,5000
+VINET,Vins et alcools Chevalier,Paul Henriot,France,1996-01-01,5000
+WANDK,Die Wandernde Kuh,Rita Müller,Germany,1996-01-01,5000
+WARTH,Wartian Herkku,Pirkko Koskitalo,Finland,1996-01-01,5000
+WELLI,Wellington Importadora,Paula Parente,Brazil,1996-01-01,5000
+WHITC,White Clover Markets,Karl Jablonski,USA,1996-01-01,5000
+WILMK,Wilman Kala,Matti Karttunen,Finland,1996-01-01,5000
+WOLZA,Wolski  Zajazd,Zbyszek Piestrzeniewicz,Poland,1996-01-01,5000

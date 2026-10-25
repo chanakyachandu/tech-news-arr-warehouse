@@ -1,0 +1,3 @@
+event_id,event_timestamp,op_code,article_id,company_name,title,category,author,published_date,arr_usd_M,summary,url
+EVT_2026_006,2026-10-20T06:43:06.279149+00:00,I,ART_LATE_999,MongoDB,Extremely Late Historical Entry: MongoDB Seed Record,AI & ML,Legacy Feed,2020-01-01,500.0,Late historical event emitted beyond the stream watermark boundary.,https://technews.io/articles/late-event
+EVT_2026_007,2026-10-25T06:43:06.279149+00:00,I,,,Corrupt Payload Without Identification,Unknown,,2026-10-25,INVALID_NUMBER_STRING,Malformed payload heading to Dead-Letter Queue.,

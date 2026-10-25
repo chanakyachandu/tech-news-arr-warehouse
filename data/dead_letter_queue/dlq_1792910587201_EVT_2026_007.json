@@ -1,0 +1,18 @@
+{
+  "quarantined_at": "2026-10-25T06:43:07.200998+00:00",
+  "failure_reason": "Missing or empty required field: `article_id`",
+  "raw_payload": {
+    "event_id": "EVT_2026_007",
+    "event_timestamp": "2026-10-25T06:43:06.279149+00:00",
+    "op_code": "I",
+    "article_id": "",
+    "company_name": "",
+    "title": "Corrupt Payload Without Identification",
+    "category": "Unknown",
+    "author": "",
+    "published_date": "2026-10-25",
+    "arr_usd_M": "INVALID_NUMBER_STRING",
+    "summary": "Malformed payload heading to Dead-Letter Queue.",
+    "url": ""
+  }
+}
